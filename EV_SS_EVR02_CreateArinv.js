@@ -714,7 +714,7 @@ define(['N/record', 'N/ui/message', 'N/search', 'N/runtime', 'N/error', './commo
 				type: "customrecord_ev_print_type",
 				filters:
 				[
-					["name","haskeywords",custbody_gv_print_type]
+					["internalid","anyof",custbody_gv_print_type]
 				],
 				columns:
 				[
