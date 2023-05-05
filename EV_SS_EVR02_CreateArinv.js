@@ -13,6 +13,8 @@ define(['N/record', 'N/ui/message', 'N/search', 'N/runtime', 'N/error', './commo
 			var tax = 0; //發票稅額
 			var fulfillment_id = runtime.getCurrentScript().getParameter("custscript_fulfillmentid");
 			var mySearchFilter = null;
+			var curruserA = runtime.getCurrentUser().id;
+			log.debug("curruserA",curruserA);
 			log.debug('---START---');
 			if (fulfillment_id) {
 				mySearchFilter = search.createFilter({
@@ -70,6 +72,8 @@ define(['N/record', 'N/ui/message', 'N/search', 'N/runtime', 'N/error', './commo
 				filters_1.push(mySearchFilter);
 			}
 			itemfulfillmentSearchObj.filters = filters_1;
+
+			
 
 			searchCount = itemfulfillmentSearchObj.runPaged().count;
 			log.debug("searchCount", searchCount);
@@ -268,19 +272,25 @@ define(['N/record', 'N/ui/message', 'N/search', 'N/runtime', 'N/error', './commo
 						});
 						// 開立人員
 						var curruser = runtime.getCurrentUser().id;
+						log.debug("curruser",curruser);
 						var printtype = SalesOrderRecord.getValue('custbody_gv_print_type');
 						log.debug("print_type",printtype);
 						var emailsender = searchissuer(printtype);
-						// strLog += "[16.開立人員]-[" + result.getValue({ name: 'createdby' }) + "]\n";
-						// recRecord.setValue({
-						// 	fieldId: 'custrecord_1_confirmed_by',
-						// 	value: result.getValue({ name: 'createdby' })
-						// });
-						strLog += "[16.開立人員]-["+emailsender+"]\n";
-						recRecord.setValue({
-						fieldId: 'custrecord_1_confirmed_by',
-						value: emailsender
-						});
+						if(curruser.toString() === "-4" )
+						{
+							strLog += "[16.開立人員]-["+emailsender+"]\n";
+							recRecord.setValue({
+							fieldId: 'custrecord_1_confirmed_by',
+							value: emailsender
+							});
+						}else{
+							strLog += "[16.開立人員]-[" + result.getValue({ name: 'createdby' }) + "]\n";
+						    recRecord.setValue({
+						    fieldId: 'custrecord_1_confirmed_by',
+						 	value: result.getValue({ name: 'createdby' })
+						   });
+						}				
+						
 						// 列印方式
 						strLog += "[18.列印方式]-[" + SalesOrderRecord.getValue('custbody_gv_print_type') + "]\n";
 						recRecord.setValue({
