@@ -191,6 +191,9 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 				//-----------------------------------				
                 context.response.writePage(form);
 				//-----------------------------------
+
+				
+				
             } else { // after press button      
 				
 				//接前頁參數
@@ -413,6 +416,8 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 						});
 						//↑↑↑ 銷項發票資料內容
 						
+						
+						
 						//↓↓↓ 銷項發票_增加格式:36_資料內容
 						var Search_36_Inv = search.create({
 						   type: "customrecord_ev_zero_tax_all",
@@ -475,7 +480,9 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 							   return true;
 							});
 						}
+						
 						//↑↑↑ 銷項發票_增加格式:36_資料內容	
+						
 
 						//↓↓↓ 銷項發票_空白發票 2019.11.06 Search_blank_Inv Search_blank_InvCnt
 						var Search_blank_Inv = search.create({
@@ -537,7 +544,11 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 						//↑↑↑ 銷項發票_空白發票 2019.11.06
 
 					}
+					
+
 					//↑↑↑ 銷項發票Search --------------------
+
+
 
 					//↓↓↓ 銷折發票Search --------------------
 					if (loadScope==2 || loadScope==3) {
@@ -773,6 +784,8 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 					}
 					//↑↑↑ 銷折發票Search --------------------
 					
+
+					
 					//↓↓↓ 進項發票Search --------------------
 					if (loadScope==1 || loadScope==3) {
 					var Search_11_Inv = search.create({
@@ -1007,6 +1020,15 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 					}
 					//↑↑↑ 進折發票Search --------------------
 
+
+
+
+
+
+	
+
+					
+
 					seqCount = 0;
 					//組字串-銷項 ========================================================================= 
 					for ( var i=0 ; i<Inv21oTxtArr.length ; i++ ) {
@@ -1098,6 +1120,13 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 					fileTxt = fileTxt + '\r\n'
 				}
 				//組字串-空白發票 ========================================================================
+
+
+
+
+
+
+
 					
 					//組字串-銷折 ========================================================================= 
 					for ( var i=0 ; i<Inv22oTxtArr.length ; i++ ) {
@@ -1192,6 +1221,10 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 					}
 					//組字串-進折 =========================================================================
 					
+					
+
+					
+					
 					//檔案處理 ======================================					
 					var fileContent = '';
 					var folderid = util.getFolderId('MediaFile');
@@ -1217,6 +1250,10 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 					
 				//SaveSearch + 組檔案 --------------------
 				
+					
+				
+					
+					
 				//-----------------------------------------------
                 //結果回報頁面 ----------------------------------
 				var form = serverWidget.createForm({
@@ -1286,12 +1323,15 @@ define(['N/ui/serverWidget','N/record','N/search','N/url','N/redirect','N/ui/mes
 				});
 					RA8.defaultValue = fileURL1;
 					RA8.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });	
+
+				
 				//-----------------------------------	
 				context.response.writePage(form);
 				//-----------------------------------	
 				
             }
         }
+		
 		
         return {
             onRequest: onRequest
