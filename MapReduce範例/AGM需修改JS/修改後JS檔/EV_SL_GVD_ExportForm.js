@@ -223,8 +223,8 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 					taskType: task.TaskType.MAP_REDUCE
 				});
 
-				mrTask.scriptId = '';
-				mrTask.deploymentId = '';
+				mrTask.scriptId = 'customscript_ev_mr_gvd_export';
+				mrTask.deploymentId = 'customscript_ev_mr_gvd_export';
 				mrTask.paras = {
 					'rgd01': rgd01,
 					'rgd02': rgd02,
