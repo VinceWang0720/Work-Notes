@@ -4,12 +4,13 @@
  * @NModuleScope Public
  */
 
-define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/email', 'N/render', 'N/runtime', 'N/log', './commonCustFolderApi.js'],
-    function (encode, file, search, format, config, record, email, render, runtime, log, custfolder) {
-        function getInputData(context) {
+define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/email', 'N/render', 'N/runtime', 'N/log'],
+    function (encode, file, search, format, config, record, email, render, runtime, log) {
+        function getInputData() {
             try {
-                var scriptObj = runtime.getCurrentScript();
 
+                var scriptObj = runtime.getCurrentScript();
+                log.debug("scriptObj",scriptObj);
                 var currentUser = runtime.getCurrentUser().id;
 
                 var rgd01 = scriptObj.getParameter({
@@ -19,7 +20,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 var rgd02 = scriptObj.getParameter({
                     name: 'rgd02'
                 });
-
+                log.debug("rgd02",rgd02);
                 var rgd03 = scriptObj.getParameter({
                     name: 'rgd03'
                 });
@@ -49,11 +50,12 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
             try {
 
                 var rgd01 = context.rgd01;
+                log.debug("rgd01",rgd01);
                 var rgd02 = context.rgd02;
                 var rgd03 = context.rgd03;
                 var rgd04 = context.rgd04;
                 var rgd05 = context.rgd05;
-
+                log.debug("Row56","開始");
                 // 依據所選的稅籍編號抓取對應的統一編號
                 var ss2 = search.create({
                     type: "customrecord_ev_registrations_all",
@@ -68,6 +70,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                     return true;
                 });
 
+                log.debug("變數：","開始");
                 //---------------------------------------------------
                 var InputSelect = '';
                 var OutputSelect = '';
@@ -127,7 +130,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 
                 var loadScope = rgd02; //申報範圍:1進項,2銷項,3進銷項	
 
-
+                log.debug("銷項發票Search","銷項發票Search");
                 //↓↓↓ 銷項發票Search --------------------
                 if (loadScope == 2 || loadScope == 3) {
                     var Search_21_Inv = search.create({
@@ -384,6 +387,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //↑↑↑ 銷項發票Search --------------------
 
+                log.debug("銷折發票Search","銷折發票Search");
                 //↓↓↓ 銷折發票Search --------------------
                 if (loadScope == 2 || loadScope == 3) {
                     var Search_22_Inv = search.create({
@@ -616,6 +620,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //↑↑↑ 銷折發票Search --------------------
 
+                log.debug("進項發票Search","進項發票Search");
                 //↓↓↓ 進項發票Search --------------------
                 if (loadScope == 1 || loadScope == 3) {
                     var Search_11_Inv = search.create({
@@ -736,6 +741,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //↑↑↑ 進項發票Search --------------------					
 
+                log.debug("進折發票Search","進折發票Search");
                 //↓↓↓ 進折發票Search --------------------
                 if (loadScope == 1 || loadScope == 3) {
                     var Search_12_Inv = search.create({
@@ -849,6 +855,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //↑↑↑ 進折發票Search --------------------
 
+                log.debug("組字串：","銷項");
                 seqCount = 0;
                 //組字串-銷項 ========================================================================= 
                 for (var i = 0; i < Inv21oTxtArr.length; i++) {
@@ -881,6 +888,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //組字串-銷項 =========================================================================
 
+                log.debug("組字串：","36格式");
                 //組字串-36格式 ========================================================================= 
                 for (var i = 0; i < Inv36oTxtArr.length; i++) {
                     // //流水號處理-----
@@ -911,6 +919,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //組字串-36格式 =========================================================================
 
+                log.debug("組字串：","空白發票");
                 //組字串-空白發票 ======================================================================== 
                 for (var i = 0; i < InvBlankTxtArr.length; i++) {
                     // //流水號處理-----
@@ -941,6 +950,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //組字串-空白發票 ========================================================================
 
+                log.debug("組字串：","銷折");
                 //組字串-銷折 ========================================================================= 
                 for (var i = 0; i < Inv22oTxtArr.length; i++) {
                     // //流水號處理-----
@@ -972,6 +982,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //組字串-銷折 =========================================================================
 
+                log.debug("組字串：","進項");
                 //組字串-進項 ========================================================================= 
                 for (var i = 0; i < Inv11iTxtArr.length; i++) {
                     // //流水號處理-----
@@ -1003,6 +1014,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
                 //組字串-進項 =========================================================================
 
+                log.debug("組字串：","進折");
                 //組字串-進折 ========================================================================= 
                 for (var i = 0; i < Inv12iTxtArr.length; i++) {
                     // //流水號處理-----
@@ -1038,6 +1050,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 var fileContent = '';
                 var folderid = util.getFolderId('MediaFile');
 
+                log.debug("寫入檔案","開始");
                 //寫入檔案
                 fileContent = fileContent + fileTxt
                 //fileContent = fileContent + '\n' + '筆數' + '\n'
@@ -1053,6 +1066,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                     id: fileId
                 });
 
+                log.debug("檔案URL",fileload.url);
                 //檔案URL
                 var fileURL1 = fileload.url;
                 //檔案處理 ======================================				
@@ -1073,12 +1087,10 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 
         function reduce(context) {
             try {
-
-                var fileURLs = [];
-                
-                fileURLs.push(context.values[0]);
-
-                context.write(fileURLs);
+                context.write({
+                    key: context.key,
+                    value: context.values
+                });
 
             } catch (e) {
                 log.debug(e.name, e.message)

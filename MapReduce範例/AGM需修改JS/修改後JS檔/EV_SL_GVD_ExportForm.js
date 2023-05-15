@@ -219,12 +219,12 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 
 
 
-				var mrTask = task.creat({
+				var mrTask = task.create({
 					taskType: task.TaskType.MAP_REDUCE
 				});
 
 				mrTask.scriptId = 'customscript_ev_mr_gvd_export';
-				mrTask.deploymentId = 'customscript_ev_mr_gvd_export';
+				mrTask.deploymentId = 'customdeploy_ev_mr_gvd_export';
 				mrTask.paras = {
 					'rgd01': rgd01,
 					'rgd02': rgd02,
@@ -234,11 +234,18 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 				};
 
 				var mrTaskId = mrTask.submit();
+				log.debug("mrTaskId",mrTaskId);
+				var taskOutput = task.checkStatus(mrTaskId).output;
+				log.debug("Status",task.checkStatus(mrTaskId));
+				log.debug("taskOutput",taskOutput);
+				taskOutput.run().each(function(result) {
+					var key = result.key;
+					log.debug("key：",key);
+					var value = result.value;
+					log.debug("value：",value);
+				})
 
-				var taskOutput = task.getOutput(mrTaskId);
-
-				var fileURL = taskOutput[0];
-
+				var fileURL = value;
 				//結果回報頁面 ----------------------------------
 				var form = serverWidget.createForm({
 					title: "媒體檔申報 -- 檔案下載結果 " // + loadScope + ' ' + rgd04 + ' ' + rgd05
