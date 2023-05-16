@@ -4,34 +4,36 @@
  * @NModuleScope Public
  */
 
-define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/email', 'N/render', 'N/runtime', 'N/log'],
-    function (encode, file, search, format, config, record, email, render, runtime, log) {
+define(['N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/render', 'N/runtime', 'N/log'],
+    function (file, search, format, config, record, render, runtime, log) {
         function getInputData() {
             try {
-
+                log.debug("1");
                 var scriptObj = runtime.getCurrentScript();
                 log.debug("scriptObj",scriptObj);
                 var currentUser = runtime.getCurrentUser().id;
 
                 var rgd01 = scriptObj.getParameter({
-                    name: 'rgd01'
+                    name: 'custscript_rgd01'
                 });
 
                 var rgd02 = scriptObj.getParameter({
-                    name: 'rgd02'
+                    name: 'custscript_rgd02'
                 });
-                log.debug("rgd02",rgd02);
+                
                 var rgd03 = scriptObj.getParameter({
-                    name: 'rgd03'
+                    name: 'custscript_rgd03'
                 });
 
                 var rgd04 = scriptObj.getParameter({
-                    name: 'rgd04'
+                    name: 'custscript_rgd04'
                 });
 
                 var rgd05 = scriptObj.getParameter({
-                    name: 'rgd05'
+                    name: 'custscript_rgd05'
                 });
+
+                log.debug("rgd",rgd01 + '、' +rgd02+ '、' +rgd03+ '、' +rgd04+ '、' +rgd05);
 
                 return {
                     rgd01: rgd01,
@@ -42,20 +44,21 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 }
 
             } catch (e) {
+                log.debug("error1");
                 log.debug(e.name, e.message)
             }
         }
 
         function map(context) {
             try {
-
+                log.debug("2");
                 var rgd01 = context.rgd01;
-                log.debug("rgd01",rgd01);
+                log.debug("map rgd01",rgd01);
                 var rgd02 = context.rgd02;
                 var rgd03 = context.rgd03;
                 var rgd04 = context.rgd04;
                 var rgd05 = context.rgd05;
-                log.debug("Row56","開始");
+                log.debug("ss2","開始ss2");
                 // 依據所選的稅籍編號抓取對應的統一編號
                 var ss2 = search.create({
                     type: "customrecord_ev_registrations_all",
@@ -64,11 +67,15 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                         search.createColumn({ name: "custrecord_18_site_uniform_number", label: "統一編號" })
                     ]
                 });
+                log.debug("ss2","結束ss2");
 
+                log.debug("ss2 Run","Run開始ss2");
+                log.debug("ss2",ss2);
                 ss2.run().each(function (result) {
                     defUniNo = result.getValue({ name: "custrecord_18_site_uniform_number" });
                     return true;
                 });
+                log.debug("ss2 Run","Run結束ss2");
 
                 log.debug("變數：","開始");
                 //---------------------------------------------------

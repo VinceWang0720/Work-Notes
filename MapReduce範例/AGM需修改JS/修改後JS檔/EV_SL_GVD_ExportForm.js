@@ -220,29 +220,39 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 
 
 				var mrTask = task.create({
-					taskType: task.TaskType.MAP_REDUCE
+					taskType: task.TaskType.MAP_REDUCE,
+					scriptId: 'customscript_ev_mr_gvd_export',
+					deploymentId: 'customdeploy_ev_mr_gvd_export',
+					params: {
+						'custscript_rgd01': rgd01,
+						'custscript_rgd02': rgd02,
+						'custscript_rgd03': rgd03,
+						'custscript_rgd04': rgd04,
+						'custscript_rgd01': rgd01,
+					}
 				});
 
-				mrTask.scriptId = 'customscript_ev_mr_gvd_export';
-				mrTask.deploymentId = 'customdeploy_ev_mr_gvd_export';
-				mrTask.paras = {
-					'rgd01': rgd01,
-					'rgd02': rgd02,
-					'rgd03': rgd03,
-					'rgd04': rgd04,
-					'rgd01': rgd01,
-				};
+				log.debug("params：",mrTask.params);
+				//mrTask.scriptId = 'customscript_ev_mr_gvd_export';
+				//mrTask.deploymentId = 'customdeploy_ev_mr_gvd_export';
+				// mrTask.paras = {
+				// 	'rgd01': rgd01,
+				// 	'rgd02': rgd02,
+				// 	'rgd03': rgd03,
+				// 	'rgd04': rgd04,
+				// 	'rgd01': rgd01,
+				// };
 
 				var mrTaskId = mrTask.submit();
-				log.debug("mrTaskId",mrTaskId);
+				log.debug("mrTaskId", mrTaskId);
 				var taskOutput = task.checkStatus(mrTaskId).output;
-				log.debug("Status",task.checkStatus(mrTaskId));
-				log.debug("taskOutput",taskOutput);
-				taskOutput.run().each(function(result) {
+				log.debug("Status", task.checkStatus(mrTaskId));
+				log.debug("taskOutput", taskOutput);
+				taskOutput.run().each(function (result) {
 					var key = result.key;
-					log.debug("key：",key);
+					log.debug("key：", key);
 					var value = result.value;
-					log.debug("value：",value);
+					log.debug("value：", value);
 				})
 
 				var fileURL = value;
