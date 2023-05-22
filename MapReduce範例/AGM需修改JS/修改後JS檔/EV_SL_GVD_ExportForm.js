@@ -228,7 +228,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 						'custscript_rgd02': rgd02,
 						'custscript_rgd03': rgd03,
 						'custscript_rgd04': rgd04,
-						'custscript_rgd01': rgd01,
+						'custscript_rgd05': rgd05,
 					}
 				});
 
@@ -242,8 +242,29 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 				// 	'rgd04': rgd04,
 				// 	'rgd01': rgd01,
 				// };
-
+				log.debug("執行submit");
 				var mrTaskId = mrTask.submit();
+
+				log.debug("取得Status");
+				var mapReduceTaskStatus = task.checkStatus({
+					taskId: mrTaskId
+				  });
+				
+				  while (!mapReduceTaskStatus.isDone) {
+					mapReduceTaskStatus = task.checkStatus({
+					  taskId: mrTaskId
+					});
+				  }
+
+				  log.debug("處理回傳的結果");
+				// 處理回傳的結果
+				if (output && output.length > 0) {
+					var result = output[0];
+					// 使用 result 中的資料
+					log.debug("result",result);
+				  }
+				
+				
 				log.debug("mrTaskId", mrTaskId);
 				var taskOutput = task.checkStatus(mrTaskId).output;
 				log.debug("Status", task.checkStatus(mrTaskId));
@@ -330,7 +351,6 @@ define(['N/ui/serverWidget', 'N/search', 'N/task'],
 
 			}
 		}
-
 		function createForm() { }
 
 		return {
