@@ -4,44 +4,50 @@
  * @NModuleScope Public
  */
 
-define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/email', 'N/render', 'N/runtime', 'N/log'],
-    function (encode, file, search, format, config, record, email, render, runtime, log) {
+define(['N/file', 'N/search', 'N/runtime', 'N/log'],
+    function (file, search, runtime, log) {
         function getInputData() {
             try {
-
+                log.debug("1");
                 var scriptObj = runtime.getCurrentScript();
                 log.debug("scriptObj",scriptObj);
                 var currentUser = runtime.getCurrentUser().id;
 
                 var rgd01 = scriptObj.getParameter({
-                    name: 'rgd01'
+                    name: 'custscript_rgd01'
                 });
 
                 var rgd02 = scriptObj.getParameter({
-                    name: 'rgd02'
+                    name: 'custscript_rgd02'
                 });
-                log.debug("rgd02",rgd02);
+                
                 var rgd03 = scriptObj.getParameter({
-                    name: 'rgd03'
+                    name: 'custscript_rgd03'
                 });
 
                 var rgd04 = scriptObj.getParameter({
-                    name: 'rgd04'
+                    name: 'custscript_rgd04'
                 });
 
                 var rgd05 = scriptObj.getParameter({
-                    name: 'rgd05'
+                    name: 'custscript_rgd05'
                 });
 
-                return {
-                    rgd01: rgd01,
-                    rgd02: rgd02,
-                    rgd03: rgd03,
-                    rgd04: rgd04,
-                    rgd05: rgd05,
-                }
+                log.debug("rgd","rgd01：" + rgd01 + '、' +"rgd02：" +rgd02+ '、' +"rgd03："+rgd03+ '、' +"rgd04："+rgd04+ '、' +"rgd05："+rgd05);
+                log.debug("rgd01 Type",typeof rgd01 );
+                log.debug("rgd02 Type",typeof rgd02 );
+                log.debug("rgd03 Type",typeof rgd03 );
+                log.debug("rgd04 Type",typeof rgd04 );
+                log.debug("rgd05 Type",typeof rgd05 );
+
+                var inputData = [
+                    { rgd01: rgd01, rgd02: rgd02,rgd03:rgd03,rgd04:rgd04,rgd05:rgd05 }
+                  ];
+                
+                  return inputData;
 
             } catch (e) {
+                log.debug("InputData error：");
                 log.debug(e.name, e.message)
             }
         }
@@ -49,13 +55,31 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
         function map(context) {
             try {
 
-                var rgd01 = context.rgd01;
-                log.debug("rgd01",rgd01);
-                var rgd02 = context.rgd02;
-                var rgd03 = context.rgd03;
-                var rgd04 = context.rgd04;
-                var rgd05 = context.rgd05;
-                log.debug("Row56","開始");
+                var scriptObj = runtime.getCurrentScript();
+                log.debug("scriptObj",scriptObj);
+                var currentUser = runtime.getCurrentUser().id;
+
+                var rgd01 = scriptObj.getParameter({
+                    name: 'custscript_rgd01'
+                });
+                log.debug("map rgd01",rgd01);
+                var rgd02 = scriptObj.getParameter({
+                    name: 'custscript_rgd02'
+                });
+                
+                var rgd03 = scriptObj.getParameter({
+                    name: 'custscript_rgd03'
+                });
+
+                var rgd04 = scriptObj.getParameter({
+                    name: 'custscript_rgd04'
+                });
+
+                var rgd05 = scriptObj.getParameter({
+                    name: 'custscript_rgd05'
+                });
+
+                log.debug("ss2","開始ss2");
                 // 依據所選的稅籍編號抓取對應的統一編號
                 var ss2 = search.create({
                     type: "customrecord_ev_registrations_all",
@@ -64,11 +88,15 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                         search.createColumn({ name: "custrecord_18_site_uniform_number", label: "統一編號" })
                     ]
                 });
+                log.debug("ss2","結束ss2");
 
+                log.debug("ss2 Run","Run開始ss2");
+                log.debug("ss2",ss2);
                 ss2.run().each(function (result) {
                     defUniNo = result.getValue({ name: "custrecord_18_site_uniform_number" });
                     return true;
                 });
+                log.debug("ss2 Run","Run結束ss2");
 
                 log.debug("變數：","開始");
                 //---------------------------------------------------
@@ -171,21 +199,27 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                             search.createColumn({ name: "formulatext2", formula: "TO_CHAR({custrecord_1_gui_date},'MM')", label: "發票日期月份" })
                         ]
                     });
-                    var Search_21_InvCnt = Search_21_Inv.runPaged().count;
+                    log.debug("Search_21_Inv End");
+                    //var Search_21_InvCnt = Search_21_Inv.runPaged().count;
                     //↓↓↓ 銷項發票資料內容
+                    log.debug("銷項發票資料內容 Start");
                     Search_21_Inv.run().each(function (result) {// .run().each has a limit of 4,000 results					    
                         //--------------------
+                        log.debug("--------------------","--------------------");
                         format_type = result.getText({ name: "custrecord_1_format_type" }); //格式別
+                        log.debug("格式別",format_type);
                         format_type = format_type.substring(0, 2);
                         var guiDateY = result.getValue({ name: "formulatext1" }); //發票日期:年度/月份
                         var guiDateM = result.getValue({ name: "formulatext2" }); //發票日期:年度/月份
                         buyGUInumber = result.getValue({ name: "custrecord_1_buyer_no" }); //買受人統一編號
                         buyGUInumber2 = result.getValue({ name: "custrecord_1_sales_no" }); //客戶統編
                         if (buyGUInumber == '') { buyGUInumber = buyGUInumber2; }
+                        log.debug("銷售人統一編號：",buyGUInumber);
                         buyGUInumber = txtStringPrcess(8, buyGUInumber.length, buyGUInumber, ' ');//總長度,字串長度,傳入字串,補字元
                         selGUInumber = result.getValue({ name: "custrecord_18_site_uniform_number", join: "CUSTRECORD_1_REGISTRATION_NUMBER" }); //銷售人統一編號
                         selGUInumber = txtStringPrcess(8, selGUInumber.length, selGUInumber, ' ');//總長度,字串長度,傳入字串,補字元
                         guiNo = result.getValue({ name: "custrecord_1_gui_no" }); //統一發票號碼
+                        log.debug("統一發票號碼",guiNo);
                         guiNo = txtStringPrcess(10, guiNo.length, guiNo, ' ');//總長度,字串長度,傳入字串,補字元
                         guiAmount = result.getValue({ name: "custrecord_1_sales_amt" }); //銷售金額(未含稅) 
                         guiAmount = txtStringPrcess(12, guiAmount.length, guiAmount, '0');//總長度,字串長度,傳入字串,補字元
@@ -224,6 +258,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                         }
 
                         //32格式資料處理
+                        log.debug("32格式資料處理 Start");
                         // if (format_type == '32'){     //2022.06.29 modify
                         if (gui_type == '2') {            //2022.06.29 modify
                             guiAmount = result.getValue({ name: "custrecord_1_sales_total_amt" }); //發票含稅總額
@@ -258,9 +293,11 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                         ));
                         return true;
                     });
+                    log.debug("銷項發票資料內容 End");
                     //↑↑↑ 銷項發票資料內容
 
                     //↓↓↓ 銷項發票_增加格式:36_資料內容
+                    log.debug("銷項發票_增加格式:36_資料內容 Start");
                     var Search_36_Inv = search.create({
                         type: "customrecord_ev_zero_tax_all",
                         filters: [["custrecord_z_registration_number.name", "is", rgd01],
@@ -284,6 +321,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                             search.createColumn({ name: "custrecord_z_exemption_no", label: "免開統一發票流水碼" }) //custrecord_exemption_no > custrecord_z_exemption_no
                         ]
                     });
+                    log.debug("銷項發票_增加格式:36_資料內容 End",Search_36_Inv);
                     var Search_36_InvCnt = Search_36_Inv.runPaged().count;
                     if (Search_36_InvCnt > 0) { //零稅率筆數>0時
                         Search_36_Inv.run().each(function (result) {
@@ -1081,6 +1119,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 });
 
             } catch (e) {
+                log.debug("Map error：")
                 log.debug(e.name, e.message)
             }
         }
@@ -1093,6 +1132,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
                 });
 
             } catch (e) {
+                log.debug("Reduce error：")
                 log.debug(e.name, e.message)
             }
         }
