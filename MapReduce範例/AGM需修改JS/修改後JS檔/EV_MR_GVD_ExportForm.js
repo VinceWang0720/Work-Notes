@@ -8,7 +8,6 @@ define(['N/file', 'N/search', 'N/runtime', 'N/log'],
     function (file, search, runtime, log) {
         function getInputData() {
             try {
-                log.debug("1");
                 var scriptObj = runtime.getCurrentScript();
                 log.debug("scriptObj",scriptObj);
                 var currentUser = runtime.getCurrentUser().id;
@@ -33,12 +32,12 @@ define(['N/file', 'N/search', 'N/runtime', 'N/log'],
                     name: 'custscript_rgd05'
                 });
 
-                log.debug("rgd","rgd01：" + rgd01 + '、' +"rgd02：" +rgd02+ '、' +"rgd03："+rgd03+ '、' +"rgd04："+rgd04+ '、' +"rgd05："+rgd05);
-                log.debug("rgd01 Type",typeof rgd01 );
-                log.debug("rgd02 Type",typeof rgd02 );
-                log.debug("rgd03 Type",typeof rgd03 );
-                log.debug("rgd04 Type",typeof rgd04 );
-                log.debug("rgd05 Type",typeof rgd05 );
+                // log.debug("rgd","rgd01：" + rgd01 + '、' +"rgd02：" +rgd02+ '、' +"rgd03："+rgd03+ '、' +"rgd04："+rgd04+ '、' +"rgd05："+rgd05);
+                // log.debug("rgd01 Type",typeof rgd01 );
+                // log.debug("rgd02 Type",typeof rgd02 );
+                // log.debug("rgd03 Type",typeof rgd03 );
+                // log.debug("rgd04 Type",typeof rgd04 );
+                // log.debug("rgd05 Type",typeof rgd05 );
 
                 var inputData = [
                     { rgd01: rgd01, rgd02: rgd02,rgd03:rgd03,rgd04:rgd04,rgd05:rgd05 }
@@ -97,8 +96,8 @@ define(['N/file', 'N/search', 'N/runtime', 'N/log'],
                     return true;
                 });
                 log.debug("ss2 Run","Run結束ss2");
-
                 log.debug("變數：","開始");
+                //#region 變數
                 //---------------------------------------------------
                 var InputSelect = '';
                 var OutputSelect = '';
@@ -128,7 +127,8 @@ define(['N/file', 'N/search', 'N/runtime', 'N/log'],
                 var seqCount = 0;         //流水號
                 var seqNumber = '';
                 //---------------------------------------------------				
-
+                //#endregion
+                
                 //SaveSearch + 組檔案 --------------------
                 //進項發票 Search_11_Inv / Search_11_InvCnt
                 //進項折讓 Search_12_Inv / Search_12_InvCnt
