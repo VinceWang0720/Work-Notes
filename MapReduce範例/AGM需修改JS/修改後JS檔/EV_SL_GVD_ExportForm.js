@@ -314,60 +314,84 @@ define(['N/ui/serverWidget', 'N/search', 'N/task', './commonAPI/commonUtil', 'N/
 			try {
 				log.debug("Into the callMR Function");
 				var mrTask = task.create({
-					taskType: task.TaskType.MAP_REDUCE,
-					scriptId: 'customscript_ev_mr_gvd_export',
-					deploymentId: 'customdeploy_ev_mr_gvd_export',
-					params: {
-						'custscript_rgd01': rgd01,
-						'custscript_rgd02': rgd02,
-						'custscript_rgd03': rgd03,
-						'custscript_rgd04': rgd04,
-						'custscript_rgd05': rgd05,
-					}
+					taskType: task.TaskType.MAP_REDUCE
 				});
-
 				mrTask.scriptId = 'customscript_ev_mr_gvd_export';
 				mrTask.deploymentId = 'customdeploy_ev_mr_gvd_export';
 				mrTask.paras = {
-					'rgd01': rgd01,
-					'rgd02': rgd02,
-					'rgd03': rgd03,
-					'rgd04': rgd04,
-					'rgd01': rgd01,
+					'custscript__ev_mr_gvd_export_rgd01': rgd01,
+					'custscript__ev_mr_gvd_export_rgd02': rgd02,
+					'custscript__ev_mr_gvd_export_rgd03': rgd03,
+					'custscript__ev_mr_gvd_export_rgd04': rgd04,
+					'custscript__ev_mr_gvd_export_rgd05': rgd05,
 				};
-
+				log.debug("paras", mrTask.paras);
 				var mrTaskId = mrTask.submit();
-				log.debug("mrTaskId",mrTaskId);
-				var taskOutput = task.checkStatus(mrTaskId).output;
-				log.debug("Status",task.checkStatus(mrTaskId));
-				log.debug("taskOutput",taskOutput);
-				taskOutput.run().each(function(result) {
-					var key = result.key;
-					log.debug("key：",key);
-					var value = result.value;
-					log.debug("value：",value);
-				})
+				log.debug("mrTaskId", mrTaskId);
 
-				var fileURL = value;
-				//結果回報頁面 ----------------------------------
-				var form = serverWidget.createForm({
-					title: "媒體檔申報 -- 檔案下載結果 " // + loadScope + ' ' + rgd04 + ' ' + rgd05
-				});
-
-				// ============== 表頭COLUMNS ==============
-				var fieldgroup_columns = form.addFieldGroup({
-					id: 'custpage_RG1',
-					label: '營業人進/銷項資料檔'
-				});
-
-				var RA1 = form.addField({
-					id: "custpage_rgd01",
-					label: "稅稽編號",
-					type: serverWidget.FieldType.TEXT,
-					container: "custpage_RG1"
-				});
-				RA1.defaultValue = rgd01;
-				RA1.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
+				log.debug("準備進入 createStatusForm Function");
+				form = createStatusForm(mrTaskId);
+				log.debug("8");
+				return form;
+				
+			} catch (error) {
+				log.error("error", error.name);
+				if (error.name == "MAP_REDUCE_ALREADY_RUNNING") {
+					deploymentCount += 1;
+					form = callMR(context);
+					return form;
+				} else {
+					log.error("各類所得申報檔 目前滿載中");
+					var scriptObj = runtime.getCurrentScript();
+					util.ScriptErrorSendMailToOwner(scriptObj.id, "XXIR009_V2_媒體申報申報檔", "目前產生報表皆在滿載中...請稍後再試");
+					form = serverWidget.createForm({
+						title: '報表產生中...'
+					});
+					var mr_error = form.addField({
+						id: 'mr_error',
+						label: 'mr_error',
+						type: serverWidget.FieldType.TEXT
+					});
+					mr_error.defaultValue = "目前產生報表皆在滿載中...請稍後再試";
+					return form;
+				}
+			}
+		};
+		function createStatusForm(scriptTaskId) {
+			try {
+				var form;
+				//狀態顯示
+				log.debug("scriptTaskId", scriptTaskId);
+				var form = serverWidget.createForm({ title: '報表產生中...' });
+				var summary = task.checkStatus(scriptTaskId);
+				log.debug("1");
+				if (summary.status == "PENDING" || summary.status == "PROCESSING") {
+					var mr_scripttaskid = form.addField({
+						id: 'mr_scripttaskid',
+						label: 'mr_scripttaskid',
+						type: serverWidget.FieldType.TEXT
+					});
+					log.debug("2");
+					mr_scripttaskid.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+					mr_scripttaskid.defaultValue = scriptTaskId;
+					form.addSubmitButton({ label: '重新整理狀態' });
+					log.debug("3");
+					//讀取scripttype
+					var ScriptID = getScript("script", "customscript_ev_mr_gvd_export");
+					//讀取primarykey
+					var DeploymentID = getScript("scriptdeployment", "customdeploy_ev_mr_gvd_export");
+					log.debug("4");
+					log.debug("ScriptID", ScriptID);
+					log.debug("DeploymentID", DeploymentID);
+					form.addButton({
+						id: "custpage_send_ev",
+						label: "檢視進度表",
+						functionName: "window.open(\'" + util.getUrl() + "/app/common/scripting/mapreducescriptstatus.nl?sortcol=dcreated&sortdir=DESC&date=TODAY&scripttype=" + ScriptID + "&primarykey=" + DeploymentID + "\');"
+					});
+					log.debug("5");
+				} else if (summary.status == "COMPLETE") {
+					log.debug("6");
+					form.title = "報表產生已完成";
 
 					var scheduleLink = form.addField({
 						id: 'custpage_temp_1',
@@ -422,8 +446,6 @@ define(['N/ui/serverWidget', 'N/search', 'N/task', './commonAPI/commonUtil', 'N/
 				log.debug("getdepartmentSelect_error:" + error.name, error.message);
 			}
 		}
-
-		function createForm() { }
 
 		return {
 			onRequest: onRequest
