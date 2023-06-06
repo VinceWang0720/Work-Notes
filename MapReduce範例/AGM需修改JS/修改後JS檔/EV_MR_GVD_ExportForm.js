@@ -4,8 +4,8 @@
  * @NModuleScope Public
  */
 
-define(['N/file', 'N/search', 'N/runtime', 'N/log'],
-    function (file, search, runtime, log) {
+define(['N/file', 'N/search', 'N/runtime', 'N/log','./commonAPI/commonUtil'], 
+    function (file, search, runtime, log,util) {
         function getInputData() {
             try {
                 var scriptObj = runtime.getCurrentScript();
@@ -128,7 +128,7 @@ define(['N/file', 'N/search', 'N/runtime', 'N/log'],
                 var seqNumber = '';
                 //---------------------------------------------------				
                 //#endregion
-                
+
                 //SaveSearch + 組檔案 --------------------
                 //進項發票 Search_11_Inv / Search_11_InvCnt
                 //進項折讓 Search_12_Inv / Search_12_InvCnt
