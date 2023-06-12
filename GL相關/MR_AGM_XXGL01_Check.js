@@ -16,6 +16,15 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             }
         }
 
+        function doGetInputData(context) {
+            try {
+                log.debug("---doGetInputData---");
+                return getInputData(context)
+            } catch (e) {
+                log.error('error in getInputData', e)
+            }
+        }
+
         function getInputData(context) {
             log.debug('start', 'start')
             return search.load({
@@ -23,7 +32,132 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             })
         }
 
-        function checkDetail(category, group, detail, subsidiary_id) {
+        function doMap(context) {
+            try {
+                log.debug("---doMap---");
+                return map(context);
+            } catch (e) {
+                log.error('error in map', e);
+            }
+        }
+
+        function map(context) {
+            
+        }
+
+        
+        function doReduce(context) {
+            try {
+                log.debug("---doReduce---");
+                return reduce(context);
+            } catch (e) {
+                log.error('error in reduce', e);
+            }
+        }
+
+        function reduce(context) {
+            log.debug('context.key', context.key)
+            log.debug('context.values', context.values)
+            let values = context.values;
+            log.debug('values.length', values.length)
+            values.map(checkProcess)
+        }
+
+        function doSummarize(summary) {
+            try {
+                log.debug("---doSummarize---");
+                return summarize(summary)
+            } catch (e) {
+                log.error('error in summary', e)
+            }
+        }
+
+        function summarize(summary) {
+
+        }
+
+        function checkProcess(context) {
+            log.debug("---checkProcess---");
+            // let tempHeader = JSON.parse(context.value);
+            let tempHeader = JSON.parse(context);
+            log.debug('tempHeader', tempHeader);
+            let ediXmlTemp = tempHeader['values']['custrecord_gl01_transaction_id']['value']
+
+            let tempHeaderId = tempHeader.id;
+            let writtenValues;
+            try {
+                check(tempHeaderId);
+                writtenValues = {
+                    custrecord_gl01_status_check: 'S',
+                    custrecord_gl01_message_check: ''
+                }
+            } catch (e) {
+                writtenValues = {
+                    custrecord_gl01_status_check: 'E',
+                    custrecord_gl01_message_check: e.message
+                }
+                log.error('check failed', e)
+            }
+
+            record.submitFields({
+                type: 'customrecord_xxgl01_header_temp',
+                id: tempHeaderId,
+                values: writtenValues
+            })
+            if (!ediXmlTemp) {
+                return;
+            }
+            //writeEdiProcess(ediXmlTemp);
+            writeEdiProcessV2(ediXmlTemp);
+        }
+
+        function check(tempHeaderId) {
+            log.debug("---check---");
+            //checkHeader(tempHeader)
+            let {
+                headerId,
+                ledger,
+                category,
+                group,
+                glDate,
+            } = library.getHeaderValues(tempHeaderId)
+            let subsidiary = library.searchSubsidiary(ledger)
+            if (subsidiary.length === 0) {
+                throw new ErrorMessage(`Company not found for ${ledger}`)
+            }
+            log.debug('1128 subsidiary id',subsidiary[0])
+            log.debug('1128 subsidiary row',subsidiary.length)
+
+            let accountingPeriod = library.searchAccountingPeriod(glDate)
+            if (accountingPeriod.length === 0) {
+                throw new ErrorMessage(`Accounting period is Closed`)
+            }
+            //let category = "INV_PO"; let group = "PO Receipt";
+            let mappings = library.searchMappingTable(category, group)
+            if (mappings.length === 0) {
+                throw new ErrorMessage(`No Mapping found ${category}, ${group}`)
+            }
+
+            //checkDetail
+            let details = library.searchDetails(headerId).map(library.parseDetailSearchResult)
+            log.debug("details length",details.length);
+            for (let i = 0; i < details.length; i++) {
+                let detail = details[i];
+                try {
+                    let remaining = library.logRemainUsage("check detail:" + i);
+                    if (remaining < 50) {
+                        throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
+                    }
+                    checkDetail(category, group, detail, subsidiary[0],i);
+                } catch (e) {
+                    e.message = `Detail Id: ${detail.id}|${e.message}`
+                    throw e;
+                }
+            }
+        }
+
+        function checkDetail(category, group, detail, subsidiary_id,i) {
+            log.debug("---checkDetail---",i);
             if (category === "INV_SO") {
                 let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
                 if (customers.length === 0) {
@@ -95,66 +229,32 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             }
         }
 
-        function check(tempHeaderId) {
-            //checkHeader(tempHeader)
-            let {
-                headerId,
-                ledger,
-                category,
-                group,
-                glDate,
-            } = library.getHeaderValues(tempHeaderId)
-            let subsidiary = library.searchSubsidiary(ledger)
-            if (subsidiary.length === 0) {
-                throw new ErrorMessage(`Company not found for ${ledger}`)
+        function writeEdiProcessV2(ediXmlTemp) {
+            log.debug("---writeEdiProcessV2---");
+            let ediHeaders = library.getEdiHeaders(ediXmlTemp);
+            if (ediHeaders.length === 0) {
+                log.debug('writeEdiProcessV2', 'ediHeaders.length = 0')
+                return;
             }
-            log.debug('1128 subsidiary id',subsidiary[0])
-            log.debug('1128 subsidiary row',subsidiary.length)
-
-            let accountingPeriod = library.searchAccountingPeriod(glDate)
-            if (accountingPeriod.length === 0) {
-                throw new ErrorMessage(`Accounting period is Closed`)
-            }
-            //let category = "INV_PO"; let group = "PO Receipt";
-            let mappings = library.searchMappingTable(category, group)
-            if (mappings.length === 0) {
-                throw new ErrorMessage(`No Mapping found ${category}, ${group}`)
+            if (ediHeaders.some(header => header.checkStatus === '')) {
+                log.debug('writeEdiProcessV2', 'some headers are not checked yet')
+                return;
             }
 
-            //checkDetail
-            let details = library.searchDetails(headerId).map(library.parseDetailSearchResult)
-
-            for (let i = 0; i < details.length; i++) {
-                let detail = details[i];
-                try {
-                    let remaining = library.logRemainUsage("check detail:" + i);
-                    if (remaining < 50) {
-                        throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
-                    }
-                    checkDetail(category, group, detail, subsidiary[0]);
-                } catch (e) {
-                    e.message = `Detail Id: ${detail.id}|${e.message}`
-                    throw e;
-                }
-            }
-        }
-
-        function map(context) {
-            
-        }
-
-        function writeEdiProcess(ediXmlTemp) {
             let writtenEdiValues;
-            if (library.sameEdiHeadersAllCheckSuccess(ediXmlTemp)) {
-                writtenEdiValues = {
-                    custrecord_agm_edi_xml_temp_status_check: 'S',
-                    custrecord_agm_edi_xml_temp_scheck_date: new Date()
-                }
-            } else {
+            if (ediHeaders.some(header => header.checkStatus === 'E')) {
                 writtenEdiValues = {
                     custrecord_agm_edi_xml_temp_status_check: 'E',
                     custrecord_agm_edi_xml_temp_scheck_date: new Date()
                 }
+                soapRequest(ediXmlTemp, 'N')
+            } else {
+                // ediHeaders.every(header => header.checkStatus === 'S')
+                writtenEdiValues = {
+                    custrecord_agm_edi_xml_temp_status_check: 'S',
+                    custrecord_agm_edi_xml_temp_scheck_date: new Date()
+                }
+                soapRequest(ediXmlTemp, 'Y')
             }
             record.submitFields({
                 type: 'customrecord_agm_edi_xml_temp',
@@ -163,21 +263,8 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             })
         }
 
-        function urlSearch() {
-            let ackUrl = '';
-            let cus_ooutbound_setobj = search.create({
-                type: "customrecord_agm_edi_xml_outbound_set",
-                filters: [['custrecord_agm_edi_xml_obset_operationpg', 'is', 'ACK']],
-                columns: [search.createColumn({name: "custrecord_agm_edi_xml_obset_url", label: "OUTBOUND_URL"})
-                ]
-            });
-            cus_ooutbound_setobj.run().each(function(result){
-                ackUrl = result.getValue({name: 'custrecord_agm_edi_xml_obset_url'})
-            });
-            return ackUrl;
-        }
-
         function soapRequest(ediId, status) {
+            log.debug("---soapRequest---");
             //ACK XML OUTBOUND
             let lookup = search.lookupFields({
                 type: 'customrecord_agm_edi_xml_temp', //AGM_EDI_XML_TEMP
@@ -229,115 +316,40 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             }
         }
 
-        function writeEdiProcessV2(ediXmlTemp) {
-            let ediHeaders = library.getEdiHeaders(ediXmlTemp);
-            if (ediHeaders.length === 0) {
-                log.debug('writeEdiProcessV2', 'ediHeaders.length = 0')
-                return;
-            }
-            if (ediHeaders.some(header => header.checkStatus === '')) {
-                log.debug('writeEdiProcessV2', 'some headers are not checked yet')
-                return;
-            }
+        function urlSearch() {
+            log.debug("---urlSearch---");
+            let ackUrl = '';
+            let cus_ooutbound_setobj = search.create({
+                type: "customrecord_agm_edi_xml_outbound_set",
+                filters: [['custrecord_agm_edi_xml_obset_operationpg', 'is', 'ACK']],
+                columns: [search.createColumn({name: "custrecord_agm_edi_xml_obset_url", label: "OUTBOUND_URL"})
+                ]
+            });
+            cus_ooutbound_setobj.run().each(function(result){
+                ackUrl = result.getValue({name: 'custrecord_agm_edi_xml_obset_url'})
+            });
+            return ackUrl;
+        }
 
+        function writeEdiProcess(ediXmlTemp) {
+            log.debug("---writeEdiProcess---");
             let writtenEdiValues;
-            if (ediHeaders.some(header => header.checkStatus === 'E')) {
-                writtenEdiValues = {
-                    custrecord_agm_edi_xml_temp_status_check: 'E',
-                    custrecord_agm_edi_xml_temp_scheck_date: new Date()
-                }
-                soapRequest(ediXmlTemp, 'N')
-            } else {
-                // ediHeaders.every(header => header.checkStatus === 'S')
+            if (library.sameEdiHeadersAllCheckSuccess(ediXmlTemp)) {
                 writtenEdiValues = {
                     custrecord_agm_edi_xml_temp_status_check: 'S',
                     custrecord_agm_edi_xml_temp_scheck_date: new Date()
                 }
-                soapRequest(ediXmlTemp, 'Y')
+            } else {
+                writtenEdiValues = {
+                    custrecord_agm_edi_xml_temp_status_check: 'E',
+                    custrecord_agm_edi_xml_temp_scheck_date: new Date()
+                }
             }
             record.submitFields({
                 type: 'customrecord_agm_edi_xml_temp',
                 id: ediXmlTemp,
                 values: writtenEdiValues
             })
-        }
-
-        function checkProcess(context) {
-            // let tempHeader = JSON.parse(context.value);
-            let tempHeader = JSON.parse(context);
-            log.debug('tempHeader', tempHeader);
-            let ediXmlTemp = tempHeader['values']['custrecord_gl01_transaction_id']['value']
-
-            let tempHeaderId = tempHeader.id;
-            let writtenValues;
-            try {
-                check(tempHeaderId);
-                writtenValues = {
-                    custrecord_gl01_status_check: 'S',
-                    custrecord_gl01_message_check: ''
-                }
-            } catch (e) {
-                writtenValues = {
-                    custrecord_gl01_status_check: 'E',
-                    custrecord_gl01_message_check: e.message
-                }
-                log.error('check failed', e)
-            }
-
-            record.submitFields({
-                type: 'customrecord_xxgl01_header_temp',
-                id: tempHeaderId,
-                values: writtenValues
-            })
-            if (!ediXmlTemp) {
-                return;
-            }
-            //writeEdiProcess(ediXmlTemp);
-            writeEdiProcessV2(ediXmlTemp);
-        }
-
-        function reduce(context) {
-            log.debug('context.key', context.key)
-            log.debug('context.values', context.values)
-            let values = context.values;
-            log.debug('values.length', values.length)
-            values.map(checkProcess)
-        }
-
-        function summarize(summary) {
-
-        }
-
-        function doGetInputData(context) {
-            try {
-                return getInputData(context)
-            } catch (e) {
-                log.error('error in getInputData', e)
-            }
-        }
-
-        function doMap(context) {
-            try {
-                return map(context);
-            } catch (e) {
-                log.error('error in map', e);
-            }
-        }
-
-        function doReduce(context) {
-            try {
-                return reduce(context);
-            } catch (e) {
-                log.error('error in reduce', e);
-            }
-        }
-
-        function doSummarize(summary) {
-            try {
-                return summarize(summary)
-            } catch (e) {
-                log.error('error in summary', e)
-            }
         }
 
         return {
