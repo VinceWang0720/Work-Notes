@@ -145,9 +145,10 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
                 let detail = details[i];
                 try {
                     let remaining = library.logRemainUsage("check detail:" + i);
-                    if (remaining < 50) {
-                        throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
-                    }
+                    log.debug("Remaining",remaining);
+                    // if (remaining < 50) {
+                    //     throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
+                    // }
                     checkDetail(category, group, detail, subsidiary[0],i);
                 } catch (e) {
                     e.message = `Detail Id: ${detail.id}|${e.message}`
@@ -158,14 +159,24 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
 
         function checkDetail(category, group, detail, subsidiary_id,i) {
             log.debug("---checkDetail---",i);
+            let remaining = library.logRemainUsage("check detail:" + i);
+            log.debug("checkDetail Remaining",remaining);
+            log.debug("category",category);
             if (category === "INV_SO") {
-                let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
+                log.debug("INV_SO");
+                //let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
+                let customers = searchCustomer(detail.partyNumber, detail.partySiteNumber)
+                let remaining = library.logRemainUsage("check detail:" + i);
+                log.debug("INV_SO Remaining",remaining);
                 if (customers.length === 0) {
                     throw new ErrorMessage(`Customer Not found for party number ${detail.partyNumber}, partySiteNumber ${detail.partySiteNumber}`)
                 }
             }
 
             if (category === "INV_PO") {
+                log.debug("INV_PO");
+                let remaining = library.logRemainUsage("check detail:" + i);
+                log.debug("INV_PO Remaining",remaining);
                 // let vendors = library.searchVendor(detail.partyNumber)
                 let vendors = library.searchVendor(detail.partyNumber, detail.partySiteNumber)
                 if (vendors.length === 0) {
@@ -175,8 +186,10 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             }
 
             if (detail.salesRepNumber !== "") {
+                log.debug("detail.salesRepNumber",detail.salesRepNumber);
                 let employee = library.searchEmployee(detail.salesRepNumber)
                 if (employee.length === 0) {
+                    log.debug("if employee.length === 0");
                     throw new ErrorMessage(`Employee Not found for salesRepNumber ${detail.salesRepNumber}`)
                 }
 
@@ -350,6 +363,45 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
                 id: ediXmlTemp,
                 values: writtenEdiValues
             })
+        }
+
+        function searchCustomer(gGlobalHqNumber, gSiteNumber) {
+            let customerSearchObj = search.create({
+                type: "customer",
+                filters:
+                    [
+                        ["isinactive", "is", "F"],
+                        "AND",
+                        ["custentity_gmc_billing_no", "is", gGlobalHqNumber],
+                        "AND",
+                        ["custentity_gmc_billing_site_no", "is", gSiteNumber]
+                    ],
+                columns:
+                    [
+                        search.createColumn({
+                            name: "entityid",
+                            sort: search.Sort.ASC
+                        }),
+                        "altname",
+                        "email",
+                        "phone",
+                        "altphone",
+                        "fax",
+                        "contact",
+                        "altemail",
+                        "custentity_availablecredit",
+                        "custentity_creditlimit",
+                        "custentity_gmc_inter_code"
+                    ]
+            });
+            let searchResultCount = customerSearchObj.runPaged().count;
+            log.debug("customerSearchObj result count", searchResultCount);
+            let customers = []
+            customerSearchObj.run().each(function (result) {
+                customers.push(result)
+                return true;
+            });
+            return customers;
         }
 
         return {
