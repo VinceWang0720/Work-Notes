@@ -165,7 +165,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             if (category === "INV_SO") {
                 log.debug("INV_SO");
                 //let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
-                let customers = searchCustomer(detail.partyNumber, detail.partySiteNumber)
+                let cutsomers = searchCustomer(detail.partyNumber, detail.partySiteNumber)
                 let remaining = library.logRemainUsage("check detail:" + i);
                 log.debug("INV_SO Remaining",remaining);
                 if (customers.length === 0) {
