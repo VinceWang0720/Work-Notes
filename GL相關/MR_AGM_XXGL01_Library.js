@@ -91,6 +91,9 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                             name: "scriptid",
                             sort: search.Sort.ASC
                         }),
+                        search.createColumn({
+                            name: "custrecord_gl01_m_mark",
+                        }),
                         "custrecord_gl01_m_ledger",
                         "custrecord_gl01_m_txn_category",
                         "custrecord_gl01_m_txn_category_desc",
@@ -141,6 +144,9 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                         search.createColumn({
                             name: "scriptid",
                             sort: search.Sort.ASC
+                        }),
+                        search.createColumn({
+                            name: "custrecord_gl01_m_mark",
                         }),
                         "custrecord_gl01_d_trx_type",
                         "custrecord_gl01_d_trx_num",
@@ -326,6 +332,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
         }
 
         function parseDetailSearchResult(result) {
+            log.debug("Hello");
             let DEBIT = '1';
             let CREDIT = '2';
             let id = result.id;
@@ -348,11 +355,12 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
             let item = result.getValue({name: 'custrecord_gl01_d_item'});
             let unitCost = result.getValue({name: 'custrecord_gl01_d_unit_cost'});
             let amount = result.getValue({name: 'custrecord_gl01_d_amount'});
+            let mark = result.getValue({name: 'custrecord_gl01_m_mark'});
             let memo = `${partyNumber}|${documentNumberSourced}|${item}|${trxQty}|${unitPrice}|${unitCost}`;
             let customers, vendors;
             let locations;
             let mappingTable
-
+            log.debug("Hello");
             function setupSpecial(mappings,sid) {
                 if (mappings.length === 0) {
                     log.error('getAccount 0', 'mappings should not be empty')
@@ -615,6 +623,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                 unitPrice,
                 unitCost,
                 amount,
+                mark,
                 setup,
                 setupSpecial,
             }
@@ -911,6 +920,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                             sort: search.Sort.ASC
                         }),
                         "custrecord_gl01_m_ledger",
+                        "custrecord_gl01_m_mark",
                         "custrecord_gl01_m_txn_category",
                         "custrecord_gl01_m_txn_category_desc",
                         "custrecord_gl01_m_txn_group",

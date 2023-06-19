@@ -133,12 +133,14 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             }
             //let category = "INV_PO"; let group = "PO Receipt";
             let mappings = library.searchMappingTable(category, group)
+            log.debug("mappings",mappings);
             if (mappings.length === 0) {
                 throw new ErrorMessage(`No Mapping found ${category}, ${group}`)
             }
-
+            log.debug("123");
             //checkDetail
             let details = library.searchDetails(headerId).map(library.parseDetailSearchResult)
+            log.debug("details",details[1]);
             log.debug("details length",details.length);
             for (let i = 0; i < details.length; i++) {
                 let detail = details[i];
