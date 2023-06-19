@@ -44,8 +44,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
         function map(context) {
             
         }
-
-        
+  
         function doReduce(context) {
             try {
                 log.debug("---doReduce---");
@@ -146,9 +145,9 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
                 try {
                     let remaining = library.logRemainUsage("check detail:" + i);
                     log.debug("Remaining",remaining);
-                    // if (remaining < 50) {
-                    //     throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
-                    // }
+                    if (remaining < 50) {
+                         throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
+                     }
                     checkDetail(category, group, detail, subsidiary[0],i);
                 } catch (e) {
                     e.message = `Detail Id: ${detail.id}|${e.message}`
