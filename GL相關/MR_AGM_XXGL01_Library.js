@@ -38,6 +38,25 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
             return companies;
         }
 
+        function searchHeaderTemp() {
+            var customrecord_xxgl01_header_tempSearchObj = search.create({
+                type: "customrecord_xxgl01_header_temp",
+                filters:
+                    [
+                    ],
+                columns:
+                    [
+                        search.createColumn({name: "custrecord_gl01_current_datanum", label: "Current_Data_Num"})
+                    ]
+            });
+            let searchResultCount = customrecord_xxgl01_header_tempSearchObj.runPaged().count;
+            log.debug("HeaderTempSearchObj result count", searchResultCount);
+            customrecord_xxgl01_header_tempSearchObj.run().each(function (result) {
+                return true;
+            });
+            return customrecord_xxgl01_header_tempSearchObj;
+        }
+
         function searchAccountingPeriod(glDate) {
             //let glDate = "2021/12/30";
             log.debug('glDate', glDate)
@@ -91,9 +110,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                             name: "scriptid",
                             sort: search.Sort.ASC
                         }),
-                        search.createColumn({
-                            name: "custrecord_gl01_m_mark",
-                        }),
+                        "custrecord_gl01_m_mark",
                         "custrecord_gl01_m_ledger",
                         "custrecord_gl01_m_txn_category",
                         "custrecord_gl01_m_txn_category_desc",
@@ -145,9 +162,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
                             name: "scriptid",
                             sort: search.Sort.ASC
                         }),
-                        search.createColumn({
-                            name: "custrecord_gl01_m_mark",
-                        }),
+                        "custrecord_gl01_d_mark",
                         "custrecord_gl01_d_trx_type",
                         "custrecord_gl01_d_trx_num",
                         "custrecord_gl01_d_trx_party_num",
@@ -332,7 +347,6 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
         }
 
         function parseDetailSearchResult(result) {
-            log.debug("Hello");
             let DEBIT = '1';
             let CREDIT = '2';
             let id = result.id;
@@ -360,7 +374,6 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
             let customers, vendors;
             let locations;
             let mappingTable
-            log.debug("Hello");
             function setupSpecial(mappings,sid) {
                 if (mappings.length === 0) {
                     log.error('getAccount 0', 'mappings should not be empty')

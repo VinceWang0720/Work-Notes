@@ -81,7 +81,8 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             let tempHeader = JSON.parse(context);
             log.debug('tempHeader', tempHeader);
             let ediXmlTemp = tempHeader['values']['custrecord_gl01_transaction_id']['value']
-
+            let currentDataNum = tempHeader['values']['custrecord_gl01_current_datanum']
+            log.debug('currentDataNum', currentDataNum);
             let tempHeaderId = tempHeader.id;
             let writtenValues;
             try {
@@ -137,18 +138,19 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             if (mappings.length === 0) {
                 throw new ErrorMessage(`No Mapping found ${category}, ${group}`)
             }
-            log.debug("123");
             //checkDetail
-            let details = library.searchDetails(headerId).map(library.parseDetailSearchResult)
-            log.debug("details",details[1]);
+            let details = library.searchDetails(headerId).map(library.parseDetailSearchResult); 
+            var lastDetail = details[details.length - 1];
+            lastDetail.mark = "the last";
+            log.debug("lastDetail",lastDetail);
             log.debug("details length",details.length);
             for (let i = 0; i < details.length; i++) {
                 let detail = details[i];
                 try {
                     let remaining = library.logRemainUsage("check detail:" + i);
-                    log.debug("Remaining",remaining);
                     if (remaining < 50) {
-                         throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
+                        return;
+                         //throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
                      }
                     checkDetail(category, group, detail, subsidiary[0],i);
                 } catch (e) {
@@ -165,8 +167,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             log.debug("category",category);
             if (category === "INV_SO") {
                 log.debug("INV_SO");
-                //let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
-                let cutsomers = searchCustomer(detail.partyNumber, detail.partySiteNumber)
+                let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
                 let remaining = library.logRemainUsage("check detail:" + i);
                 log.debug("INV_SO Remaining",remaining);
                 if (customers.length === 0) {
@@ -176,6 +177,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
 
             if (category === "INV_PO") {
                 log.debug("INV_PO");
+
                 let remaining = library.logRemainUsage("check detail:" + i);
                 log.debug("INV_PO Remaining",remaining);
                 // let vendors = library.searchVendor(detail.partyNumber)
@@ -364,45 +366,6 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
                 id: ediXmlTemp,
                 values: writtenEdiValues
             })
-        }
-
-        function searchCustomer(gGlobalHqNumber, gSiteNumber) {
-            let customerSearchObj = search.create({
-                type: "customer",
-                filters:
-                    [
-                        ["isinactive", "is", "F"],
-                        "AND",
-                        ["custentity_gmc_billing_no", "is", gGlobalHqNumber],
-                        "AND",
-                        ["custentity_gmc_billing_site_no", "is", gSiteNumber]
-                    ],
-                columns:
-                    [
-                        search.createColumn({
-                            name: "entityid",
-                            sort: search.Sort.ASC
-                        }),
-                        "altname",
-                        "email",
-                        "phone",
-                        "altphone",
-                        "fax",
-                        "contact",
-                        "altemail",
-                        "custentity_availablecredit",
-                        "custentity_creditlimit",
-                        "custentity_gmc_inter_code"
-                    ]
-            });
-            let searchResultCount = customerSearchObj.runPaged().count;
-            log.debug("customerSearchObj result count", searchResultCount);
-            let customers = []
-            customerSearchObj.run().each(function (result) {
-                customers.push(result)
-                return true;
-            });
-            return customers;
         }
 
         return {
