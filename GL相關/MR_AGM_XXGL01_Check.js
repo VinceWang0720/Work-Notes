@@ -144,6 +144,10 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format', 'N/
             lastDetail.mark = "the last";
             log.debug("lastDetail",lastDetail);
             log.debug("details length",details.length);
+
+            var count = library.searchHeaderTemp(details.length);
+            log.debug("count",count);
+            
             for (let i = 0; i < details.length; i++) {
                 let detail = details[i];
                 try {

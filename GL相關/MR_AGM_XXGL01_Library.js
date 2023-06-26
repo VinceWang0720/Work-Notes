@@ -38,7 +38,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
             return companies;
         }
 
-        function searchHeaderTemp() {
+        function searchHeaderTemp(count) {
             var customrecord_xxgl01_header_tempSearchObj = search.create({
                 type: "customrecord_xxgl01_header_temp",
                 filters:
@@ -1128,6 +1128,7 @@ define(['N/log', 'N/search', 'N/record', 'N/email', 'N/runtime', 'N/format'],
         
         return {
             searchSubsidiary,
+            searchHeaderTemp,
             searchAccountingPeriod,
             searchMappingTable,
             searchDetails,
