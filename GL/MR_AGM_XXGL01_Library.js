@@ -849,6 +849,7 @@
                 locationLookup[warehouseBank] = locations;
                 return locations;
             }
+
             function searchLocation_v2(warehouseBank,subsidiary_id) {
                 if (locationLookup.hasOwnProperty(warehouseBank)) {
                     return locationLookup[warehouseBank];
@@ -1001,6 +1002,27 @@
                 return recordIdAfterSave;
             }
 
+            function setdetailMark(id,mark){
+                 let header = record.load({
+                     type: 'customrecord_xxgl01_detail_temp',
+                     id: id
+                 });
+
+                 let mark = header.getValue({
+                     fieldId: 'custrecord_gl01_d_mark'
+                 });
+
+                 header.setValue({
+                     fieldId: 'custrecord_gl01_d_mark',
+                     value: mark
+                   });
+                 var recordIdAfterSave = header.save();
+
+                 log.debug("before mark", mark);
+
+                 return recordIdAfterSave;
+            }
+
             let idByNameLookup = {}
             function searchIdByName(type, name) {
                 let key = `${type}-${name}`;
@@ -1132,6 +1154,7 @@
             return {
                 searchSubsidiary,
                 getHeaderCurrentNum,
+                setdetailMark,
                 searchAccountingPeriod,
                 searchMappingTable,
                 searchDetails,

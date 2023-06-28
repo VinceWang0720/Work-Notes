@@ -85,12 +85,33 @@
                 //log.debug('currentDataNum', currentDataNum);
                 let tempHeaderId = tempHeader.id;
                 let writtenValues;
+                let currentNum;
                 try {
                     check(tempHeaderId);
+                    log.debug("writtenValues");
+                    currentNum = getDataNum(tempHeaderId);
+                    log.debug("Afert check currentNum",currentNum);
+                    let details = library.searchDetails(tempHeaderId).map(library.parseDetailSearchResult);
+                    let detail = details[currentNum];
+                    log.debug("detail.mark",detail.mark);
+
                     writtenValues = {
                         custrecord_gl01_status_check: 'S',
                         custrecord_gl01_message_check: ''
                     }
+
+                    //  if(detail.mark === "the last"){
+                    //  writtenValues = {
+                    //          custrecord_gl01_status_check: 'S',
+                    //          custrecord_gl01_message_check: ''
+                    //      }
+                    //  }else{
+                    //      writtenValues = {
+                    //          custrecord_gl01_status_check: '',
+                    //          custrecord_gl01_message_check: ''
+                    //      }
+                    //  }
+                    
                 } catch (e) {
                     writtenValues = {
                         custrecord_gl01_status_check: 'E',
@@ -140,15 +161,33 @@
                 }
                 //checkDetail
                 let details = library.searchDetails(headerId).map(library.parseDetailSearchResult); 
-                var lastDetail = details[details.length - 1];
-                lastDetail.mark = "the last";
+                let lastDetail = details[details.length - 1];
+
+                //註記最後一筆資料
+                library.setdetailMark(lastDetail.id,"the last");
                 log.debug("lastDetail",lastDetail);
+                log.debug("lastDetail2",details[details.length - 2]);
                 log.debug("details length",details.length);
 
+                let detail = record.load({
+                    type: 'customrecord_xxgl01_detail_temp',
+                    id: lastDetail.id
+                });
+
+                log.debug("After save detail", detail);
+
+                let mark = detail.getValue({
+                    fieldId: 'custrecord_gl01_d_mark'
+                });
+
+                log.debug("After save mark", mark);
+
                 let recordIdAfterSave  = " ";
-               
-                
-                for (let i = 0; i < details.length; i++) {
+
+                let currentValue =  getDataNum(tempHeaderId);
+                log.debug('currentValue',currentValue );
+
+                for (let i = currentValue; i < details.length-currentValue; i++) {
                     let detail = details[i];
                     try {
                         let remaining = library.logRemainUsage("check detail:" + i);
@@ -157,17 +196,6 @@
                             recordIdAfterSave = library.getHeaderCurrentNum(tempHeaderId,i);
                             log.debug('recordIdAfterSave',recordIdAfterSave );
                             
-                            let aaa = record.load({
-                                type: 'customrecord_xxgl01_header_temp',
-                                id: tempHeaderId
-                            });
-
-                            let currentValue = aaa.getValue({
-                                fieldId: 'custrecord_gl01_current_datanum'
-                            });
-            
-                            log.debug('currentValue',currentValue );
-
                             log.debug("current i", i);
                             log.debug("The end");
                             return;
@@ -183,8 +211,8 @@
 
             function checkDetail(category, group, detail, subsidiary_id,i) {
                 log.debug("---checkDetail---",i);
-                let remaining = library.logRemainUsage("check detail:" + i);
-                log.debug("checkDetail Remaining",remaining);
+                //let remaining = library.logRemainUsage("check detail:" + i);
+                //log.debug("checkDetail Remaining",remaining);
                 log.debug("category",category);
                 if (category === "INV_SO") {
                     log.debug("INV_SO");
@@ -199,8 +227,8 @@
                 if (category === "INV_PO") {
                     log.debug("INV_PO");
 
-                    let remaining = library.logRemainUsage("check detail:" + i);
-                    log.debug("INV_PO Remaining",remaining);
+                    //let remaining = library.logRemainUsage("check detail:" + i);
+                    //log.debug("INV_PO Remaining",remaining);
                     // let vendors = library.searchVendor(detail.partyNumber)
                     let vendors = library.searchVendor(detail.partyNumber, detail.partySiteNumber)
                     if (vendors.length === 0) {
@@ -213,7 +241,7 @@
                     log.debug("detail.salesRepNumber",detail.salesRepNumber);
                     let employee = library.searchEmployee(detail.salesRepNumber)
                     if (employee.length === 0) {
-                        log.debug("if employee.length === 0");
+                        //log.debug("if employee.length === 0");
                         throw new ErrorMessage(`Employee Not found for salesRepNumber ${detail.salesRepNumber}`)
                     }
 
@@ -233,7 +261,7 @@
 
                 // check costCenter
                 // currently if costCenter is empty, not check the department
-                log.debug('detail.costCenter', detail.costCenter)
+                //log.debug('detail.costCenter', detail.costCenter)
                 if (detail.costCenter) {
                     let departments = library.searchDepartment(detail.costCenter)
                     if (departments.length === 0) {
@@ -241,7 +269,7 @@
                     }
                 }
 
-                log.debug('detail.productLine', detail.productLine)
+                //log.debug('detail.productLine', detail.productLine)
                 if (detail.productLine !== '0000') {
                     if (!library.checkCustomSegment(detail.productLine)) {
                         throw new ErrorMessage(`Custom Segment Not found ${detail.productLine}`)
@@ -265,6 +293,18 @@
                     }
                 }
             }
+
+            function getDataNum(tempHeaderId){
+                let headerTemp = record.load({
+                    type: 'customrecord_xxgl01_header_temp',
+                    id: tempHeaderId
+                });
+
+                let currentValue = headerTemp.getValue({
+                    fieldId: 'custrecord_gl01_current_datanum'
+                });
+                return currentValue;
+            };
 
             function writeEdiProcessV2(ediXmlTemp) {
                 log.debug("---writeEdiProcessV2---");
