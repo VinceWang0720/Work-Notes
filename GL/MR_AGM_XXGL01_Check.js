@@ -26,7 +26,7 @@
             }
 
             function getInputData(context) {
-                log.debug('start', 'start')
+                log.debug("---GetInputData---");
                 return search.load({
                     id: 'customsearch_xxgl01_header_check'
                 })
@@ -85,32 +85,31 @@
                 //log.debug('currentDataNum', currentDataNum);
                 let tempHeaderId = tempHeader.id;
                 let writtenValues;
-                let currentNum;
+                let currentNum2;
                 try {
-                    check(tempHeaderId);
-                    log.debug("writtenValues");
-                    currentNum = getDataNum(tempHeaderId);
-                    log.debug("Afert check currentNum",currentNum);
-                    let details = library.searchDetails(tempHeaderId).map(library.parseDetailSearchResult);
-                    let detail = details[currentNum];
-                    log.debug("detail.mark",detail.mark);
+                    let details2 = check(tempHeaderId);
+                    // log.debug("details2",details2);
 
+                    // currentNum2 = library.getHeaderCurrentNum(tempHeaderId);
+                    // log.debug("After check currentNum2",currentNum2);
+                    // log.debug("details length",details2.length);
+
+                    // let detail = details2[currentNum2-1];
+                    // log.debug("detail",detail);
+                    // log.debug("detail.mark",detail.mark);
+                    // log.debug("detail.id",detail.id);
+                    log.debug("details2",details2);
+                    if(details2 === true){
                     writtenValues = {
-                        custrecord_gl01_status_check: 'S',
-                        custrecord_gl01_message_check: ''
+                            custrecord_gl01_status_check: 'S',
+                            custrecord_gl01_message_check: ''
+                        }
+                    }else{
+                        writtenValues = {
+                            custrecord_gl01_status_check: '',
+                            custrecord_gl01_message_check: ''
+                        }
                     }
-
-                    //  if(detail.mark === "the last"){
-                    //  writtenValues = {
-                    //          custrecord_gl01_status_check: 'S',
-                    //          custrecord_gl01_message_check: ''
-                    //      }
-                    //  }else{
-                    //      writtenValues = {
-                    //          custrecord_gl01_status_check: '',
-                    //          custrecord_gl01_message_check: ''
-                    //      }
-                    //  }
                     
                 } catch (e) {
                     writtenValues = {
@@ -155,10 +154,11 @@
                 }
                 //let category = "INV_PO"; let group = "PO Receipt";
                 let mappings = library.searchMappingTable(category, group)
-                log.debug("mappings",mappings);
+                //log.debug("mappings",mappings);
                 if (mappings.length === 0) {
                     throw new ErrorMessage(`No Mapping found ${category}, ${group}`)
                 }
+
                 //checkDetail
                 let details = library.searchDetails(headerId).map(library.parseDetailSearchResult); 
                 let lastDetail = details[details.length - 1];
@@ -166,39 +166,31 @@
                 //註記最後一筆資料
                 library.setdetailMark(lastDetail.id,"the last");
                 log.debug("lastDetail",lastDetail);
-                log.debug("lastDetail2",details[details.length - 2]);
                 log.debug("details length",details.length);
-
-                let detail = record.load({
-                    type: 'customrecord_xxgl01_detail_temp',
-                    id: lastDetail.id
-                });
-
-                log.debug("After save detail", detail);
-
-                let mark = detail.getValue({
-                    fieldId: 'custrecord_gl01_d_mark'
-                });
-
-                log.debug("After save mark", mark);
-
+                log.debug("detail id",lastDetail.id);
+                //確認是否註記成功
+                let {detail,detailMark} = library.getdetailMark(lastDetail.id);
+                log.debug("detail|detailMark ",detail+'|'+detailMark);
+               
                 let recordIdAfterSave  = " ";
-
-                let currentValue =  getDataNum(tempHeaderId);
-                log.debug('currentValue',currentValue );
-
-                for (let i = currentValue; i < details.length-currentValue; i++) {
+                let i;
+                log.debug('currentValue',currentNum );
+                
+                for ( i = currentNum; i < details.length-currentNum; i++) {
                     let detail = details[i];
                     try {
                         let remaining = library.logRemainUsage("check detail:" + i);
+                       
                         if (remaining < 50) {
-
-                            recordIdAfterSave = library.getHeaderCurrentNum(tempHeaderId,i);
+                            log.debug("checkDetail Remaining",remaining);
+                            //紀錄當前為第幾筆資料
+                            recordIdAfterSave = library.setHeaderCurrentNum(tempHeaderId,i);
                             log.debug('recordIdAfterSave',recordIdAfterSave );
-                            
+                            //確認是否紀錄成功
+                            let aaa = library.getHeaderCurrentNum(tempHeaderId);
+                            log.debug('儲存後Header記數欄位和ID：',aaa +'|' +tempHeaderId);
                             log.debug("current i", i);
-                            log.debug("The end");
-                            return;
+                            return false;
                             //throw new ErrorMessage(`Script Execution Usage Limit Exceeded`)
                         }
                         checkDetail(category, group, detail, subsidiary[0],i);
@@ -207,29 +199,27 @@
                         throw e;
                     }
                 }
+                recordIdAfterSave = library.setHeaderCurrentNum(tempHeaderId,details.length);
+                
+                return true;
             }
 
             function checkDetail(category, group, detail, subsidiary_id,i) {
-                log.debug("---checkDetail---",i);
+                //log.debug("---checkDetail---",i);
                 //let remaining = library.logRemainUsage("check detail:" + i);
                 //log.debug("checkDetail Remaining",remaining);
-                log.debug("category",category);
+                //log.debug("category",category);
                 if (category === "INV_SO") {
-                    log.debug("INV_SO");
+                    //log.debug("INV_SO");
                     let customers = library.searchCustomer(detail.partyNumber, detail.partySiteNumber)
-                    let remaining = library.logRemainUsage("check detail:" + i);
-                    log.debug("INV_SO Remaining",remaining);
                     if (customers.length === 0) {
                         throw new ErrorMessage(`Customer Not found for party number ${detail.partyNumber}, partySiteNumber ${detail.partySiteNumber}`)
                     }
                 }
 
                 if (category === "INV_PO") {
-                    log.debug("INV_PO");
-
-                    //let remaining = library.logRemainUsage("check detail:" + i);
-                    //log.debug("INV_PO Remaining",remaining);
-                    // let vendors = library.searchVendor(detail.partyNumber)
+                    //log.debug("INV_PO");
+                    //let vendors = library.searchVendor(detail.partyNumber)
                     let vendors = library.searchVendor(detail.partyNumber, detail.partySiteNumber)
                     if (vendors.length === 0) {
                         // throw new ErrorMessage(`Vendor Not found for party number ${detail.partyNumber}`)
@@ -238,7 +228,7 @@
                 }
 
                 if (detail.salesRepNumber !== "") {
-                    log.debug("detail.salesRepNumber",detail.salesRepNumber);
+                    //log.debug("detail.salesRepNumber",detail.salesRepNumber);
                     let employee = library.searchEmployee(detail.salesRepNumber)
                     if (employee.length === 0) {
                         //log.debug("if employee.length === 0");
@@ -252,7 +242,7 @@
                     }
                 }
 
-                log.debug('detail.reconciliationRef', detail.reconciliationRef)
+                //log.debug('detail.reconciliationRef', detail.reconciliationRef)
                 if(detail.reconciliationRef) {
                 if(!library.checkCustomSegmentReconciliation(detail.reconciliationRef))  {
                     library.insertCustomSegmentReconciliation(detail.reconciliationRef)
@@ -277,7 +267,7 @@
                 }
 
                 let locations = library.searchLocation_v2(detail.warehouseBank,subsidiary_id)
-                log.debug('1128 check location v2 row','function searchLocation_v2 :' + locations.length)
+                //log.debug('1128 check location v2 row','function searchLocation_v2 :' + locations.length)
                 if (locations.length === 0) {
                     throw new ErrorMessage(`Location Not found for ${detail.warehouseBank}`)
                 }
@@ -293,18 +283,6 @@
                     }
                 }
             }
-
-            function getDataNum(tempHeaderId){
-                let headerTemp = record.load({
-                    type: 'customrecord_xxgl01_header_temp',
-                    id: tempHeaderId
-                });
-
-                let currentValue = headerTemp.getValue({
-                    fieldId: 'custrecord_gl01_current_datanum'
-                });
-                return currentValue;
-            };
 
             function writeEdiProcessV2(ediXmlTemp) {
                 log.debug("---writeEdiProcessV2---");

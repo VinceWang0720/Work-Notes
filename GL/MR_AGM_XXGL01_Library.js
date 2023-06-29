@@ -981,7 +981,8 @@
                 return {headerId, ledger, currency, category, group, glDate, sourceSystem, rateType, documentNumber,currentNum}
             }
 
-            function getHeaderCurrentNum(id,num){
+            //取Header上的Currnet欄位
+            function getHeaderCurrentNum(id){
                 let header = record.load({
                     type: 'customrecord_xxgl01_header_temp',
                     id: id
@@ -991,34 +992,54 @@
                     fieldId: 'custrecord_gl01_current_datanum'
                 });
 
+                return currentNum;
+            }
+
+            //設定Header上的Current欄位
+            function setHeaderCurrentNum(id,num){
+                let header = record.load({
+                    type: 'customrecord_xxgl01_header_temp',
+                    id: id
+                });
+
+                // let currentNum = header.getValue({
+                //     fieldId: 'custrecord_gl01_current_datanum'
+                // });
+
                 header.setValue({
                     fieldId: 'custrecord_gl01_current_datanum',
                     value: num
                   });
                 var recordIdAfterSave = header.save();
 
-                log.debug("before currentNum", currentNum);
-
                 return recordIdAfterSave;
             }
 
+            //取Detail上的Mark欄位
+            function getdetailMark(id){
+                let detail = record.load({
+                    type: 'customrecord_xxgl01_detail_temp',
+                    id: id
+                });
+
+                let detailMark = detail.getValue({
+                    fieldId: 'custrecord_gl01_d_mark'
+                });
+                return {detail,detailMark};
+            }
+
+            //設定Detail上的Mark欄位
             function setdetailMark(id,mark){
-                 let header = record.load({
+                 let detail = record.load({
                      type: 'customrecord_xxgl01_detail_temp',
                      id: id
                  });
 
-                 let mark = header.getValue({
-                     fieldId: 'custrecord_gl01_d_mark'
-                 });
-
-                 header.setValue({
+                 detail.setValue({
                      fieldId: 'custrecord_gl01_d_mark',
                      value: mark
                    });
-                 var recordIdAfterSave = header.save();
-
-                 log.debug("before mark", mark);
+                 var recordIdAfterSave = detail.save();
 
                  return recordIdAfterSave;
             }
@@ -1154,6 +1175,8 @@
             return {
                 searchSubsidiary,
                 getHeaderCurrentNum,
+                setHeaderCurrentNum,
+                getdetailMark,
                 setdetailMark,
                 searchAccountingPeriod,
                 searchMappingTable,
