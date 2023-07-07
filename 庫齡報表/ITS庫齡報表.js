@@ -481,12 +481,133 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 
     };
 
-    function summarize(){};
+    function summarize(context){
+        var scriptObj = runtime.getCurrentScript();
+        var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
+        var tw = format.format({
+            value: new Date(p_base_date),  //date,
+            type: format.Type.DATETIME,
+            timezone: format.Timezone.ASIA_TAIPEI
+        });
+        tw = new Date(tw);
+        var year = tw.getFullYear();
+        var month = tw.getMonth() + 1;
+        var day = tw.getDate();
+
+        var base_date = month + '/' + day + '/' + year;
+
+        runExcel(context, base_date);
+    };
 
     //#region Function
     function getPeriodSearch(itemid,type, fromDate, toDate,locationid){};
 
-    function runExcel(context, base_date){};
+    function runExcel(context, base_date){
+        var userObj = runtime.getCurrentUser();
+
+        //Style
+        var xmlString = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>';
+        xmlString += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
+        xmlString += 'xmlns:o="urn:schemas-microsoft-com:office:office" ';
+        xmlString += 'xmlns:x="urn:schemas-microsoft-com:office:excel" ';
+        xmlString += 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ';
+        xmlString += 'xmlns:html="http://www.w3.org/TR/REC-html40">';
+        xmlString += '<Styles>';
+        xmlString += '<Style ss:ID="number1">';
+        xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
+        xmlString += '<NumberFormat ss:Format="#,##0_);[Red]\(#,##0\)"/>';
+        xmlString += '</Style>';
+        xmlString += '<Style ss:ID="number2">';
+        xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
+        xmlString += '<NumberFormat ss:Format="#,##0.000_);[Red]\(#,##0.000\)"/>';
+        xmlString += '</Style>';
+        xmlString += '</Styles>';
+        xmlString += '<Worksheet ss:Name="Sheet1">';
+        xmlString += '<Table>';
+
+        //填入橫向標頭欄位
+        xmlString += '<Row>' +
+        '<Cell><Data ss:Type="String">基準日:</Data></Cell>' +
+        '<Cell><Data ss:Type="String">' + base_date + '</Data></Cell>' +
+        '</Row>';
+        xmlString += '<Row>' +
+        '<Cell><Data ss:Type="String">製表人:</Data></Cell>' +
+        '<Cell><Data ss:Type="String">' + userObj.name + '</Data></Cell>' +
+        '</Row>';
+        xmlString += '<Row>' +
+        '<Cell><Data ss:Type="String">方案</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Item Category1</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Item Name/Number : Part Number</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Display Name/Code : Part Description</Data></Cell>' +
+        '<Cell><Data ss:Type="String">ITEM TYPE</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Location</Data></Cell>' +
+        '<Cell><Data ss:Type="String">AVERAGE COST</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Selling Qty in current month </Data></Cell>' +
+        '<Cell><Data ss:Type="String">Total Qty </Data></Cell>' +
+        '<Cell><Data ss:Type="String">Total Amt </Data></Cell>' +
+        '<Cell><Data ss:Type="String">0-30 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">0-30 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">31-60 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">31-60 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">61-90 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">61-90 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">90-120 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">90-120 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">121-150 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">121-150 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">151-180 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">151-180 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">181-360 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">181-360 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">361-540 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">361-540 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">541-720 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">541-720 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">721-1080 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">721-1080 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">over 1080 QTY</Data></Cell>' +
+        '<Cell><Data ss:Type="String">over 1080 AMT</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Cost Center</Data></Cell>' +
+        '<Cell><Data ss:Type="String">PM</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Buyer</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Brand</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Class</Data></Cell>' +
+        '<Cell><Data ss:Type="String">In SO Qty</Data></Cell>' +
+        '<Cell><Data ss:Type="String">最近一次異動日</Data></Cell>' +
+        '<Cell><Data ss:Type="String">進貨價格</Data></Cell>' +
+        '<Cell><Data ss:Type="String">最近一次出貨日</Data></Cell>' +
+        '<Cell><Data ss:Type="String">出貨價格</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Order#</Data></Cell>' +
+        '<Cell><Data ss:Type="String">Date</Data></Cell>' +
+        '<Cell><Data ss:Type="String">DL Qty</Data></Cell>' +
+        '<Cell><Data ss:Type="String">銷售金額</Data></Cell>' +
+        '<Cell><Data ss:Type="String">幣別</Data></Cell>' +
+        '<Cell><Data ss:Type="String">銷售金額(NTD)</Data></Cell>' +
+        '<Cell><Data ss:Type="String">單價</Data></Cell>' +
+        '<Cell><Data ss:Type="String">業務部門</Data></Cell>' +
+        '<Cell><Data ss:Type="String">業務員</Data></Cell>' +
+        '</Row>';
+
+        context.output.iterator().each(function(key,value){
+            var details = JSON.parse(value);
+            if(details.ttlQTY > 0 ){
+                xmlString = writeXml(details, xmlString);
+            }
+            return true;
+        });
+
+        xmlString += '</Table></Worksheet></Workbook>';
+
+        var base64EncodedString = encode.convert({
+            string: xmlString,
+            inputEncoding: encode.Encoding.UTF_8,
+            outputEncoding: encode.Encoding.BASE_64
+        });
+
+        var folderId = custfolder.getUserFolder(runtime.getCurrentUser().name,'客製報表');
+        var xlsFile = file.create({name: '庫齡.xls', fileType: 'EXCEL', contents: base64EncodedString, folder: folderId});
+        xlsFile.save();
+    };
 
     function NVL(n){};
 
