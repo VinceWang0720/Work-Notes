@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>12120</WindowHeight>
+  <WindowWidth>28800</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>32767</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="新細明體" x:CharSet="136" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s62">
+   <Font ss:FontName="新細明體" x:CharSet="136" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s63">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="新細明體" x:CharSet="136" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat ss:Format="#,##0.000_);[Red]\(#,##0.000\)"/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s64">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="新細明體" x:CharSet="136" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat ss:Format="#,##0_);[Red]\(#,##0\)"/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s65">
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s67">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="新細明體" x:CharSet="136" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat ss:Format="Short Date"/>
+   <Protection/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="27" ss:ExpandedRowCount="9" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="54" ss:DefaultRowHeight="16.5">
+   <Column ss:AutoFitWidth="0" ss:Width="170.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="194.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="77.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="93.75"/>
+   <Column ss:Width="54.75" ss:Span="1"/>
+   <Column ss:Index="7" ss:Width="67.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="87"/>
+   <Column ss:AutoFitWidth="0" ss:Width="85.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="69.75"/>
+   <Column ss:Index="14" ss:Width="54.75"/>
+   <Column ss:Index="16" ss:Width="54.75"/>
+   <Column ss:Index="18" ss:Width="54.75"/>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">基準日:</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">7/7/2023</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">製表人:</Data></Cell>
+    <Cell><Data ss:Type="String">180504100 Michael Tseng</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">Item Name/Number : Part Number</Data></Cell>
+    <Cell><Data ss:Type="String">Display Name/Code : Part Description</Data></Cell>
+    <Cell><Data ss:Type="String">Location</Data></Cell>
+    <Cell><Data ss:Type="String">AVERAGE COST</Data></Cell>
+    <Cell><Data ss:Type="String">Selling Qty in current month </Data></Cell>
+    <Cell><Data ss:Type="String">Total Qty </Data></Cell>
+    <Cell><Data ss:Type="String">Total Amt </Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="String">Inventory QTY</Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="String">Inventory Date</Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="String">Aging Days</Data></Cell>
+    <Cell><Data ss:Type="String">Cost Center</Data></Cell>
+    <Cell><Data ss:Type="String">Brand</Data></Cell>
+    <Cell><Data ss:Type="String">Class</Data></Cell>
+    <Cell><Data ss:Type="String">In SO Qty</Data></Cell>
+    <Cell><Data ss:Type="String">最近一次異動日</Data></Cell>
+    <Cell><Data ss:Type="String">進貨價格</Data></Cell>
+    <Cell><Data ss:Type="String">最近一次出貨日</Data></Cell>
+    <Cell><Data ss:Type="String">出貨價格</Data></Cell>
+    <Cell><Data ss:Type="String">Order#</Data></Cell>
+    <Cell><Data ss:Type="String">Date</Data></Cell>
+    <Cell><Data ss:Type="String">DL Qty</Data></Cell>
+    <Cell><Data ss:Type="String">銷售金額</Data></Cell>
+    <Cell><Data ss:Type="String">幣別</Data></Cell>
+    <Cell><Data ss:Type="String">銷售金額(NTD)</Data></Cell>
+    <Cell><Data ss:Type="String">單價</Data></Cell>
+    <Cell><Data ss:Type="String">業務部門</Data></Cell>
+    <Cell><Data ss:Type="String">業務員</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">客戶待驗倉</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">300</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-07-02T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:Index="14" ss:StyleID="s64"/>
+    <Cell ss:Index="16" ss:StyleID="s64"/>
+    <Cell ss:Index="18" ss:StyleID="s64"/>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">客戶待驗倉</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">300</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-05-28T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">40</Data></Cell>
+    <Cell ss:Index="14" ss:StyleID="s64"/>
+    <Cell ss:Index="16" ss:StyleID="s64"/>
+    <Cell ss:Index="18" ss:StyleID="s64"/>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">客戶待驗倉</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">300</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-05-03T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">65</Data></Cell>
+    <Cell ss:Index="14" ss:StyleID="s64"/>
+    <Cell ss:Index="16" ss:StyleID="s64"/>
+    <Cell ss:Index="18" ss:StyleID="s64"/>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">AAC001</Data></Cell>
+    <Cell><Data ss:Type="String">銷售倉</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">500</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-05-20T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">48</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:Index="14" ss:StyleID="s64"/>
+    <Cell ss:Index="16" ss:StyleID="s64"/>
+    <Cell ss:Index="18" ss:StyleID="s64"/>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">BXZ002</Data></Cell>
+    <Cell><Data ss:Type="String">BXZ002</Data></Cell>
+    <Cell><Data ss:Type="String">客戶待驗倉</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">700</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-07-05T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell ss:Index="14" ss:StyleID="s64"/>
+    <Cell ss:Index="16" ss:StyleID="s64"/>
+    <Cell ss:Index="18" ss:StyleID="s64"/>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0">
+    <Cell><Data ss:Type="String">BXZ002</Data></Cell>
+    <Cell><Data ss:Type="String">BXZ002</Data></Cell>
+    <Cell><Data ss:Type="String">客戶待驗倉</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">700</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="DateTime">2023-05-02T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">66</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Unsynced/>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>14</ActiveRow>
+     <ActiveCol>5</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>
