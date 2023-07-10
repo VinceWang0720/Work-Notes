@@ -102,9 +102,9 @@
 			 filters:[
 				 ["type","anyof","Assembly"],
 				 "OR",
-				 ["type","anyof","InvtPart"],
-				"AND",
-				["internalid","anyof",1556]
+				 ["type","anyof","InvtPart"]
+				//"AND",
+				//["internalid","anyof",1556]
 			 ],
 	   columns:
 	   [
@@ -135,7 +135,7 @@
 			 var out_amount = 0;
 			 var itemid, displayname, salesdescription;  //category2, category3,
 			 var department, brand, location,itemclass, trans_status, createdfrom,createdfromtype;
-			 var trandate,tranid, trans_type, soInternalid, soTranid, soDate, soQuantity,soAmount, currency, exchangerate, soAmountTWD;
+			 var tranid, trans_type, soInternalid, soTranid, soDate, soQuantity,soAmount, currency, exchangerate, soAmountTWD;
 			 var onHand = 0;
 			 var onHandAmount = 0;
 			 var in_date = "";
@@ -178,8 +178,7 @@
 					trans_status = result.getText({ name: 'statusref', summary: "GROUP" });
 					tranid = result.getValue({ name: 'tranid', summary: "GROUP" });
 					createdfromtype = result.getText({ name: "type",join: "createdFrom", summary: "GROUP" });
-					trandate = result.getValue({name: 'trandate',summary: "GROUP"});
-					log.debug("trandate",trandate);
+					var trandate = result.getValue({name: 'trandate',summary: "GROUP"});
 					//var tradingdate = result.getValue({name: 'custcol_om_recent_trading_day',summary: "GROUP"});
 					location_name[internalid] = location;
 
@@ -276,7 +275,7 @@
 									var sum = result.getValue({name: 'quantity',summary: "SUM"});
 									var amount = result.getValue({name: 'amount',summary: "SUM"});
 									var trans_status = result.getText({name: 'statusref',summary: "GROUP"});
-									var trandate1 = result.getValue({name: 'trandate',summary: "GROUP"});
+									var trandate = result.getValue({name: 'trandate',summary: "GROUP"});
 									tranid = result.getValue({name: 'tranid',summary: "GROUP"});
 									createdfrom = result.getValue({name: "tranid",join: "createdFrom",summary: "GROUP"});	//PO Number
 									createdfromtype = result.getText({ name: "type",join: "createdFrom", summary: "GROUP" });
@@ -335,7 +334,6 @@
 							}
 						});
 
-						log.debug("PeriodObject",PeriodObject);
 						//查詢SO單
 						soTranid = '';
 						soAmount = '';
@@ -368,7 +366,6 @@
 						soTranid = SO_Object['tranid'];
 						soAmount = SO_Object['amount'];
 						soDate = SO_Object['trandate'];
-						log.debug("soDate",soDate);
 						soQuantity = SO_Object['quantity'];
 						currency = SO_Object['currency'];
 						exchangerate = SO_Object['exchangerate'];
@@ -376,7 +373,6 @@
 						soRate = SO_Object['rate'];
 						soDepartment = SO_Object['department'];
 						soSales = SO_Object['salesrep'];
-
 
 						if(Number(onHand_temp) > 0){
 						   //log.debug("有調倉",obj.id+"_"+location_index)
@@ -391,7 +387,6 @@
 									'ttlAMT': Number(location_onHand[location_index]) * averagecost, //ttlAMT,
 									'onHand_temp':Number(onHand_temp),
 									'averagecost':averagecost,
-									'trandate': trandate,
 									'_0_30' : writePeriod[0],
 									'_31_60' : writePeriod[1],
 									'_61_90' : writePeriod[2],
@@ -448,7 +443,6 @@
 									'ttlAMT': Number(location_onHand[location_index]) * averagecost, //ttlAMT,
 									'onHand_temp':Number(onHand_temp),
 									'averagecost':averagecost,
-									'trandate':trandate,
 									'_0_30' : writePeriod[0],
 									'_31_60' : writePeriod[1],
 									'_61_90' : writePeriod[2],
@@ -523,7 +517,6 @@
 				 timezone: format.Timezone.ASIA_TAIPEI
 		 });
 		 if(context.values.length == 1){
-			log.debug("context.values.length",context.values.length);
 			context.write({
 				key: context.key,
 				value: JSON.parse(context.values[0])
@@ -689,11 +682,6 @@
 		 '<Cell><Data ss:Type="String">Selling Qty in current month </Data></Cell>' +
 		 '<Cell><Data ss:Type="String">Total Qty </Data></Cell>' +
 		 '<Cell><Data ss:Type="String">Total Amt </Data></Cell>' +
-		 //20230710
-		 '<Cell><Data ss:Type="String">Inventory QTY </Data></Cell>' +
-		 '<Cell><Data ss:Type="String">Inventory Date </Data></Cell>' +
-		 '<Cell><Data ss:Type="String">Aging Days </Data></Cell>' +
-		 //
 		 '<Cell><Data ss:Type="String">0-30 QTY</Data></Cell>' +
 		 '<Cell><Data ss:Type="String">0-30 AMT</Data></Cell>' +
 		 '<Cell><Data ss:Type="String">31-60 QTY</Data></Cell>' +
@@ -762,9 +750,8 @@
 	 }
 
 	 // function writeXml(header, detail, xmlString){
-	 function writeXml(detail, xmlString,base_date)
+	 function writeXml(detail, xmlString)
 	 {
-		log.debug("detail",detail);
 		 var averagecost = Number(NVL(detail.ttlAMT/detail.ttlQTY));
 		 var p1 = Number(detail._0_30);
 		 var p2 = Number(detail._31_60);
@@ -808,11 +795,6 @@
 		 xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.currentSold) + '</Data></Cell>' +
 			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlQTY) + '</Data></Cell>' +
 			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
-			 //20230710
-			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
-			 '<Cell ss:StyleID="number1"><Data ss:Type="String">' + detail.trandate + '</Data></Cell>' +
-			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
-			 //
 			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1) + '</Data></Cell>' +
 			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1_cost) + '</Data></Cell>' +
 			 '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p2) + '</Data></Cell>' +
