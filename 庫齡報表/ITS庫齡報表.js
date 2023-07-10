@@ -5,35 +5,30 @@
  */
 define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N/email', 'N/render', 'N/runtime', 'N/log', './commonCustFolderApi'],
 	function (encode, file, search, format, config, record, email, render, runtime, log, custfolder) {
-		//待做事項
-		//1. 把這個Script放至ITS的庫齡Script裡
-		//2. 檢查下面已經埋的Log：trandate、tradingdate、經過解析的Details內容
-		//3. 確認後，把數值填入相應的欄位裡，框架已寫好
-		//4. 確認Xml是否有Date欄位，不然依然使用String作為Type
-		//5. 測試產出的報表數值內容是否正確
-		const periodArr = [
-			{ "from": 0, "to": 30 },
-			{ "from": 31, "to": 60 },
-			{ "from": 61, "to": 90 },
-			{ "from": 91, "to": 120 },
-			{ "from": 121, "to": 150 },
-			{ "from": 151, "to": 180 },
-			{ "from": 181, "to": 360 },
-			{ "from": 361, "to": 540 },
-			{ "from": 541, "to": 720 },
-			{ "from": 721, "to": 1080 },
-			{ "from": 1081, "to": 9999 }
-		];
+		const PERIOD_ARR = [
+            { "from": 0,   "to": 30 },
+            { "from": 31,  "to": 60 },
+            { "from": 61,  "to": 90 },
+            { "from": 91,  "to": 120 },
+            { "from": 121, "to": 150 },
+            { "from": 151, "to": 180 },
+            { "from": 181, "to": 360 },
+            { "from": 361, "to": 540 },
+            { "from": 541, "to": 720 },
+            { "from": 721, "to": 1080 },
+            { "from": 1081, "to": 9999 }
+        ];
 
 		function getInputData() {
+            log.debug("getInputData");
 			return search.create({
 				type: "assemblyitem",
 				filters: [
 					["type", "anyof", "Assembly"],
 					"OR",
 					["type", "anyof", "InvtPart"],
-					//  "AND",
-					//  ["internalid","anyof",1063]
+					"AND",
+					["internalid","anyof",1556]
 				],
 				columns:
 					[
@@ -41,21 +36,24 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 						//search.createColumn({name: "inventorylocation", label: "Inventory Location"})
 					]
 			});
-		};
+		}
 
 		function map(context) {
-			var obj = JSON.parse(context.value);
-			var scriptObj = runtime.getCurrnentScript();
-			var pBaseDate = scriptObjScript.getParameter({
-				name: 'custscript_xxpr004_v2_base_date'
-			});
-			var baseDate = format.format({
-				value: new Date(pBaseDate),
-				type: format.Type.DATE,
-				timezone: format.Timezone.ASIA_TAIPEI
-			});
-
-			try {
+            try {
+                log.debug("map");
+                var obj = JSON.parse(context.value);
+                //log.debug("obj",obj);
+                var scriptObj = runtime.getCurrentScript();
+                //log.debug("scriptObj",scriptObj);
+                var pBaseDate = scriptObj.getParameter({
+                    name: 'custscript_xxpr004_v2_base_date'
+                });
+                //log.debug("pBaseDate",pBaseDate);
+                var baseDate = format.format({
+                    value: new Date(pBaseDate),
+                    type: format.Type.DATE,
+                    timezone: format.Timezone.ASIA_TAIPEI
+                });
 				//#region  Parameter
 				var searchObj = getPeriodSearch(obj.id, "onorbefore", baseDate, baseDate, "");
 				var in_TTL = 0;
@@ -81,6 +79,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 				var Period_flag = false;
 				//#endregion
 
+                //log.debug("searchObj.runPaged().count",searchObj.runPaged().count);
 				if (searchObj.runPaged().count > 0) {
 					searchObj.run().each(function (result) {
 						itemid = result.getValue({ name: 'itemid', join: 'item', summary: 'GROUP' });
@@ -88,7 +87,7 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 						program = result.getValue({ name: 'custitem_program', join: 'item', summary: 'GROUP' });
 						category1 = result.getValue({ name: 'csegitem_category1', join: 'item', summary: 'GROUP' });
 						salesdescription = result.getValue({ name: 'salesdescription', join: 'item', summary: 'GROUP' });
-						item_type = result.getValue({ name: 'custitem_aic_item_type', join: 'item', summary: 'GROUP' });
+						//item_type = result.getValue({ name: 'custitem_aic_item_type', join: 'item', summary: 'GROUP' });
 						trans_type = result.getValue({ name: 'type', join: 'item', summary: 'GROUP' });
 						sum = result.getValue({ name: 'quantity', summary: "SUM" });
 						amount = result.getValue({ name: 'amount', summary: "SUM" });
@@ -114,10 +113,10 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 						trans_status = result.getText({ name: 'statusref', summary: "GROUP" });
 						tranid = result.getValue({ name: 'tranid', summary: "GROUP" });
 						createdfromtype = result.getText({ name: "type", join: "createdFrom", summary: "GROUP" });
-						var trandate = result.getValue({ name: 'trandate', summary: "GROUP" });
-						log.debug("trandate",trandate);
+						//var trandate = result.getValue({ name: 'trandate', summary: "GROUP" });
+						//log.debug("trandate",trandate);
 						var tradingdate = result.getValue({ name: 'custcol_om_recent_trading_day', summary: "GROUP" });
-						log.debug("tradingdate",tradingdate);
+						//log.debug("tradingdate",tradingdate);
 						location_name[internalid] = location;
 
 						if (!PeriodObject[obj.id + "_" + internalid]) {
@@ -167,19 +166,21 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 						return true;
 					});
 
+                    //log.debug("run searchObj the end");
+
 					var averagecost = onHandAmount / onHand;
-					location_name.forEach({
+					location_name.forEach(
 						function(result, locationIndex) {
 							var writePeriod = [];
 							var writePeriod_So = [];
-							periodArr.forEach(function (result, index) {
+							PERIOD_ARR.forEach(function (result, index) {
 								writePeriod[index] = 0;
 								writePeriod_So[index] = 0;
 							});
 							var onHand_temp = location_onHand[locationIndex]; //當on hand都扣完，就不繼續撈
 
 							if (location_onHand[locationIndex] != 0) {
-								periodArr.forEach(function (result, index) {
+								PERIOD_ARR.forEach(function (result, index) {
 									if (onHand_temp > 0) {
 										var from = result['from'];
 										var to = result['to'];
@@ -437,10 +438,10 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 									});
 								}
 							}
-						}
+						
 					});
-
-					// log.debug("PeriodObject",PeriodObject);
+                    //log.debug("run location_name the end");
+					//log.debug("Period_flag",Period_flag);
 					if (Period_flag) {
 						context.write({
 							key: obj.id,
@@ -452,64 +453,228 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 				}
 			}
 			catch (e) {
-				log.debug("error", e.message);
-			};
-		};
+				log.debug("map error", e.message);
+			}
+		}
 
 		function reduce(context) {
-			var scriptObj = runtime.getCurrentScript();
-			var p_base_date = scriptObj.getParameter({ name: 'custscript_xxpr004_v2_base_date' });
-			//var p_base_date = '2022/06/29';
-			var baseDate = format.format({
-				value: new Date(p_base_date),
-				type: format.Type.DATE,
-				timezone: format.Timezone.ASIA_TAIPEI
-			});
+            try{
+                log.debug("reduce");
+                var scriptObj = runtime.getCurrentScript();
+                var p_base_date = scriptObj.getParameter({ name: 'custscript_xxpr004_v2_base_date' });
+                //var p_base_date = '2022/06/29';
+                var baseDate = format.format({
+                    value: new Date(p_base_date),
+                    type: format.Type.DATE,
+                    timezone: format.Timezone.ASIA_TAIPEI
+                });
 
-			if (context.values.length == 1) {
-				context.write({
-					key: context.key,
-					value: JSON.parse(context.values[0])
-				});
-			} else {
-				var Period = "";
-				var PeriodObject = "";
-				for (var i = 0; i < context.values.length; i++) {
-					if (JSON.parse(context.values[i]).PeriodObject) {
-						PeriodObject = JSON.parse(context.values[i]).PeriodObject;
-					}
-				}
+                if (context.values.length == 1) {
+                    context.write({
+                        key: context.key,
+                        value: JSON.parse(context.values[0])
+                    });
+                } else {
+                    var Period = "";
+                    var PeriodObject = "";
+                    for (var i = 0; i < context.values.length; i++) {
+                        if (JSON.parse(context.values[i]).PeriodObject) {
+                            PeriodObject = JSON.parse(context.values[i]).PeriodObject;
+                        }
+                    }
 
-				log.debug("PeriodObject", PeriodObject);
-
-			}
-
-		};
+                    log.debug("PeriodObject", PeriodObject);
+                    //計算資料
+                    for(var i = 0 ; i < context.values.length; i++){
+                        var obj = JSON.parse(context.values[i]);
+                        if(!obj.PeriodObject){
+                            log.debug("obj",obj);
+                            Period = obj;
+                            for (var per in PeriodObject) {
+                            if (PeriodObject.hasOwnProperty(per)) {
+                                if(PeriodObject[per].length > 0 && Number(Period["onHand_temp"]) > 0){
+                                    log.debug("尋找其他倉"+per,PeriodObject[per]);
+                                    for(var l = 0 ; l < PeriodObject[per].length; l++){
+                                        var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);
+                                        if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){
+                                            PERIOD_ARR.forEach(function (result, index) {
+                                                var from = result['from'];
+                                                var to = result['to'];
+        
+                                                var newdate = new Date(baseDate);
+                                                var newdate2 = new Date(baseDate);
+        
+                                                newdate.setDate(newdate.getDate() - from); // minus the date
+                                                newdate2.setDate(newdate2.getDate() - to); // minus the date
+        
+                                                if(PeriodDate<=newdate && PeriodDate>= newdate2){
+                                                    Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(PeriodObject[per][l]["sum"]);
+                                                    Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
+                                                    Period["onHand_temp"] = Number(Period["onHand_temp"]) - Number(PeriodObject[per][l]["sum"]);
+                                                    PeriodObject[per][l]["sum"] = 0;
+                                                }
+                                            });
+                                        }else{
+                                            PERIOD_ARR.forEach(function (result, index) {
+                                                var from = result['from'];
+                                                var to = result['to'];
+        
+                                                var newdate = new Date(baseDate);
+                                                var newdate2 = new Date(baseDate);
+        
+                                                newdate.setDate(newdate.getDate() - from); // minus the date
+                                                newdate2.setDate(newdate2.getDate() - to); // minus the date
+        
+                                                if(PeriodDate<=newdate && PeriodDate>= newdate2){
+                                                    Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(Period["onHand_temp"]);
+                                                    Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
+                                                    PeriodObject[per][l]["sum"] = Number(PeriodObject[per][l]["sum"]) - Number(Period["onHand_temp"]);
+                                                    Period["onHand_temp"] = 0;
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        //  log.debug("調整完PeriodObject",PeriodObject);
+                        //  log.debug("調整完Period",Period);
+                        // 重新整理
+                        var onHand_temp = Period.ttlQTY;
+                        PERIOD_ARR.forEach(function (result, index) {
+                            var from = result['from'];
+                            var to = result['to'];
+        
+                            //log.debug("onHand_temp",onHand_temp);
+                            if(Number(onHand_temp) > 0){
+                                //log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
+                                if(Number(onHand_temp) - Number(Period["_"+from+"_"+to]) >= 0){
+                                    onHand_temp = Number(onHand_temp) - Number(Period["_"+from+"_"+to]);
+                                }else{
+                                    Period["_"+from+"_"+to] = Number(onHand_temp);
+                                    Period["_"+from+"_"+to+"_COST"] = Number(onHand_temp) * Number(Period["averagecost"]);
+                                    onHand_temp = 0;
+                                }
+                            }else{
+                                Period["_"+from+"_"+to] = 0;
+                                Period["_"+from+"_"+to+"_COST"] = 0;
+                            }
+                        });
+                        context.write({
+                            key: context.key+"_"+Period["location_index"],
+                            value: Period
+                        });
+                        }
+                }
+                }
+            }catch(e){
+                log.debug("reduce error", e.message);
+            }
+		}
 
 		function summarize(context) {
-			var scriptObj = runtime.getCurrentScript();
-			var p_base_date = scriptObj.getParameter({ name: 'custscript_xxpr004_v2_base_date' });
-			var tw = format.format({
-				value: new Date(p_base_date),  //date,
-				type: format.Type.DATETIME,
-				timezone: format.Timezone.ASIA_TAIPEI
-			});
-			tw = new Date(tw);
-			var year = tw.getFullYear();
-			var month = tw.getMonth() + 1;
-			var day = tw.getDate();
+            try{
+                log.debug("summarize");
+                var scriptObj = runtime.getCurrentScript();
+                var p_base_date = scriptObj.getParameter({ name: 'custscript_xxpr004_v2_base_date' });
+                var tw = format.format({
+                    value: new Date(p_base_date),  //date,
+                    type: format.Type.DATETIME,
+                    timezone: format.Timezone.ASIA_TAIPEI
+                });
+                tw = new Date(tw);
+                var year = tw.getFullYear();
+                var month = tw.getMonth() + 1;
+                var day = tw.getDate();
 
-			var base_date = month + '/' + day + '/' + year;
+                var base_date = month + '/' + day + '/' + year;
 
-			runExcel(context, base_date);
-		};
+                log.debug("run runExcel");
+                runExcel(context, base_date);
+            }catch(e){
+                log.debug("summarize error", e.message);
+            }
+		}
 
 		//#region Function
-		function getPeriodSearch(itemid, type, fromDate, toDate, locationid) { };
+		function getPeriodSearch(itemid, type, fromDate, toDate, locationid) {
+            var filters = [
+                ["type","anyof","InvAdjst","ItemShip","ItemRcpt","InvTrnfr","TrnfrOrd","Unbuild", "Build"],
+                "AND",["shipping","is","F"],
+               //  "AND",["mainline","is","F"],
+                "AND",["taxline","is","F"],
+                "AND",["account.type","anyof","OthCurrAsset"],
+                "AND",["formuladate: CASE WHEN {type}='Inventory Adjustment' THEN {custcol_om_recent_trading_day} ELSE {trandate} END","within",fromDate,toDate],
+                "AND",["item.internalid","anyof",itemid],
+        "AND",["location","anyof",locationid]
+            ];
+
+            if( type == "onorbefore" )
+            {
+                filters = [
+                    ["type","anyof","InvAdjst","ItemShip","ItemRcpt","InvTrnfr","TrnfrOrd","Unbuild", "Build"],
+                    "AND",["shipping","is","F"],
+                   //  "AND",["mainline","is","F"],
+                    "AND",["taxline","is","F"],
+                    "AND",["account.type","anyof","OthCurrAsset"],
+                    "AND",["formuladate: CASE WHEN {type}='Inventory Adjustment' THEN {custcol_om_recent_trading_day} ELSE {trandate} END","onorbefore",fromDate,fromDate],
+                    "AND",["item.internalid","anyof",itemid]
+                ];
+                //暫時  需要調整
+                if(locationid !=""){
+                    filters = [
+                        ["type","anyof","InvAdjst","ItemShip","ItemRcpt","InvTrnfr","TrnfrOrd","Unbuild", "Build"],
+                        "AND",["shipping","is","F"],
+                       //  "AND",["mainline","is","F"],
+                        "AND",["taxline","is","F"],
+                        "AND",["account.type","anyof","OthCurrAsset"],
+                        "AND",["formuladate: CASE WHEN {type}='Inventory Adjustment' THEN {custcol_om_recent_trading_day} ELSE {trandate} END","onorbefore",fromDate,fromDate],
+                        "AND",["item.internalid","anyof",itemid],
+                        "AND",["location","anyof",locationid]
+                    ];
+                }
+            }
+
+        var inventoryitemSearchObj = search.create({
+            type: "transaction",
+            filters: filters,
+            columns:
+            [
+                 search.createColumn({name: "itemid",join: "item", summary: "GROUP",label: "Name"}),
+                 search.createColumn({name: "displayname",join: "item", summary: "GROUP",label: "Display Name"}),
+                 search.createColumn({name: "salesdescription",join: "item", summary: "GROUP",label: "Description"}),
+                 search.createColumn({name: "type",join: "item", summary: "GROUP",label: "Type"}),
+                 search.createColumn({name: "custitem_program",join: "item", summary: "GROUP",label: "Item program"}),
+                 search.createColumn({name: "csegitem_category1",join: "item", summary: "GROUP",label: "Item Category1"}),
+                 //search.createColumn({name: "csegitem_category2",join: "item", summary: "GROUP",label: "Item Category2"}),
+                 //search.createColumn({name: "csegitem_category3",join: "item", summary: "GROUP",label: "Item Category3"}),
+                 search.createColumn({name: "department",join: "item", summary: "GROUP", label: "Department"}),
+                 search.createColumn({name: "custitemaeb_pm_code",join: "item", summary: "GROUP", label: "PM Code"}),
+                 search.createColumn({name: "custitemaeb_buyer_code",join: "item", summary: "GROUP", label: "Buyer Code"}),
+                 search.createColumn({name: "custitem_brand",join: "item", summary: "GROUP",label: "品牌"}),
+                //search.createColumn({name: "custitem_aic_item_type",join: "item", summary: "GROUP", label: "G_Item Type"}),
+                 search.createColumn({name: "name",join: "location", summary: "GROUP",label: "name"}),
+                 search.createColumn({name: "internalid",join: "location", summary: "GROUP",label: "internalid"}),
+                 search.createColumn({name: "name",join: "class", summary: "GROUP",label: "name"}),
+                 search.createColumn({name: "trandate", summary: "GROUP",sort: search.Sort.DESC, label: "Date"}),
+                 search.createColumn({name: "custcol_om_recent_trading_day", summary: "GROUP",sort: search.Sort.DESC, label: "Trading Date"}),
+                 search.createColumn({name: "type", summary: "GROUP", label: "Type"}),
+                 search.createColumn({name: "quantity", summary: "SUM", label: "Quantity"}),
+                 search.createColumn({name: "amount", summary: "SUM", label: "Amount"}),
+                 search.createColumn({name: "statusref", summary: "GROUP", label: "Status"}),
+                 search.createColumn({name: "tranid", summary: "GROUP", label: "Document Number"}),
+                 search.createColumn({name: "tranid",join: "createdFrom",summary: "GROUP",label: "Document Number"}),
+                 search.createColumn({name: "type",join: "createdFrom", summary: "GROUP",label: "Type"}),
+            ]
+        });
+
+        return inventoryitemSearchObj;
+        }
 
 		function runExcel(context, base_date) {
+            try{
 			var userObj = runtime.getCurrentUser();
-
+            log.debug("userObj",userObj);
 			//Style
 			var xmlString = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>';
 			xmlString += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
@@ -551,14 +716,24 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 				'<Cell><Data ss:Type="String">AGING_NUMBER</Data></Cell>' +
 				'</Row>';
 
-			context.output.iterator().each(function (key, value) {
-				var details = JSON.parse(value);
-				log.debug("details", details);
-				if (details.ttlQTY > 0) {
-					xmlString = writeXml(details, xmlString);
-				}
-				return true;
-			});
+                log.debug("xmlString",xmlString);
+                log.debug("---------------------------");
+
+                log.debug("context",context);
+                log.debug("context output",context.output);
+
+            context.output.iterator().each(function (key, value){
+
+                log.debug(key,value);
+         
+                var details = JSON.parse(value);
+                log.debug("details", details);
+                log.debug("details.ttlQTY", details.ttlQTY);
+                if(details.ttlQTY > 0 ){
+                xmlString = writeXml(details, xmlString);
+                }
+                      return true;
+              });
 
 			xmlString += '</Table></Worksheet></Workbook>';
 
@@ -571,9 +746,14 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 			var folderId = custfolder.getUserFolder(runtime.getCurrentUser().name, '客製報表');
 			var xlsFile = file.create({ name: '庫齡.xls', fileType: 'EXCEL', contents: base64EncodedString, folder: folderId });
 			xlsFile.save();
-		};
+        }catch(e){
+            log.debug("runExcel error",e.message);
+        }
+		}
 
 		function writeXml(detail, xmlString) {
+            try{
+            log.debug("writeXml detail", detail);
 			var averagecost = Number(NVL(detail.ttlAMT / detail.ttlQTY));
 			var p1 = Number(detail._0_30);
 			var p2 = Number(detail._31_60);
@@ -614,6 +794,9 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 			'<Cell><Data ss:Type="String">' + '' + '</Data></Cell>' + //COMMENTS
 			'<Cell><Data ss:Type="NUMBER">' + '' + '</Data></Cell>' + //AGING_NUMBER
 			'</Row>';
+        }catch(e){
+            log.debug("writeXml error",e.message);
+        }
 		}
 
 		function NVL(n) {
@@ -688,5 +871,5 @@ define(['N/encode', 'N/file', 'N/search', 'N/format', 'N/config', 'N/record', 'N
 			map: map,
 			reduce: reduce,
 			summarize: summarize
-		}
+		};
 	});
