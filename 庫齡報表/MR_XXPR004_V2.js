@@ -175,7 +175,7 @@
 					PERIOD_ARR.forEach(function (result, index) {
 						writePeriod[index] = 0;
 						writePeriod_So[index] = 0;
-						dayArray[index] = 0;
+						dayArray[index] = '';
 					});
 					var onHand_temp = location_onHand[location_index]; //當on hand都扣完，就不繼續撈
 					// log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
@@ -208,9 +208,9 @@
 								var periodObj = getPeriodSearch(obj.id, "within", baseDate_2, baseDate_1,location_index);
 								var period_in_TTL = 0;
 								var period_out_TTL = 0;
+								var againgDay = '';
 								soInternalid = '';
 								periodObj.run().each(function(result){
-
 									itemid = result.getValue({name: 'itemid',join:"item",summary: "GROUP"});
 									trans_type = result.getValue({name: 'type',summary: "GROUP"});
 									var sum = result.getValue({name: 'quantity',summary: "SUM"});
@@ -219,7 +219,8 @@
 									tranid = result.getValue({name: 'tranid',summary: "GROUP"});
 									createdfrom = result.getValue({name: "tranid",join: "createdFrom",summary: "GROUP"});	//PO Number
 									createdfromtype = result.getText({ name: "type",join: "createdFrom", summary: "GROUP" });
-
+									var trandateTest =  result.getValue({name: 'trandate',summary: "GROUP"}); 
+									log.debug("againgDay",againgDay);
 									//進貨
 									if((trans_type == "ItemRcpt" && createdfromtype != "Transfer Order") || 
 										(trans_type == "InvAdjst" && Number(sum) > 0) || 
@@ -232,6 +233,7 @@
 											in_check =false;
 										}
 										period_in_TTL = Number(period_in_TTL) + Number(sum);
+										againgDay = trandateTest;
 									}
 									else
 									{
@@ -248,16 +250,23 @@
 
 								});
 								//log.debug(location_name[location_index],"onHand_temp="+onHand_temp+",period_in_TTL="+period_in_TTL);
+								log.debug("writePeriod 1",writePeriod);
+								log.debug("onHand_temp",onHand_temp);
+								log.debug("period_in_TTL",period_in_TTL);
 								var periodsum = 0;
 								if(onHand_temp - period_in_TTL >= 0){
 									writePeriod[index] = Number(period_in_TTL);
+									dayArray[index] = againgDay;
 									periodsum = Number(period_in_TTL);
 
 								}else{
 									writePeriod[index] = Number(onHand_temp) ;
+									dayArray[index] = againgDay;
 									periodsum = Number(onHand_temp);
 								}
-								log.debug("writePeriod",writePeriod);
+								log.debug("writePeriod 2",writePeriod);
+								log.debug("dayArray",dayArray);
+								log.debug("//////////////");
 								// 收料與開帳資料減掉onHand = 可以讓其他倉庫剩餘onHand扣除
 								for(var d = 0; d < PeriodObject[obj.id+"_"+location_index].length; ) {
 									if(periodsum > 0){
@@ -318,12 +327,31 @@
 						soDepartment = SO_Object['department'];
 						soSales = SO_Object['salesrep'];
 
+						var newDayArray = dayArray.filter(function(element){
+							return element !== "";
+						});
+
+						var newWritePeriod = writePeriod.filter(function(element){
+							return element !== 0;
+						});
+
+						var data = {};
+						for (var i = 0; i < newWritePeriod.length; i++) {
+							var key = "data" + (i + 1);
+							data[key] = {
+							  'againg': newDayArray[i],
+							  'inv_qty': newWritePeriod[i]
+							};
+						  }	
+		  
+						log.debug("Data",data);
 						//
 						if(Number(onHand_temp) > 0){
 						   //log.debug("有調倉",obj.id+"_"+location_index)
 							context.write({
 								key: obj.id,
 								value: {
+									'Data1': data,
 									'itemid' : itemid,
 									'displayname': displayname,
 									'salesdescription': salesdescription,
@@ -381,6 +409,7 @@
 							context.write({
 								key: obj.id+"_"+location_index,
 								value: {
+									'Data': data,
 									'itemid' : itemid,
 									'displayname': displayname,
 									'salesdescription': salesdescription,
@@ -817,26 +846,38 @@
 			var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 			//log.debug("daysDiff",daysDiff);
 
-			xmlString += '<Row>' +
-				'<Cell><Data ss:Type="String">' + detail.itemid + '</Data></Cell>' +
-				'<Cell><Data ss:Type="String">' + detail.displayname + '</Data></Cell>' +
-				'<Cell><Data ss:Type="String">' + (detail.location || '') + '</Data></Cell>' ;
+			var dataCount = Object.keys(detail.Data).length;
+			var aaa =detail.Data.data1.againg;
+			var bbb =detail.Data.data2.againg;
+			log.debug("dataCount",dataCount);
+			log.debug("aaa",aaa);
+			log.debug("bbb",bbb);
 
-			if(isFloat(averagecost)){
-				xmlString += '<Cell ss:StyleID="number2"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>' ;
-			}else{
-				xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>';
+			for(var i = 1; i <= Object.keys(detail.Data).length; i++){
+				var testQQQ = 'detail.Data.data' + String(i);
+				log.debug("testQQQ",testQQQ);
+				log.debug(" detail.Data.data[i]", detail.Data.data[i].inv_qty);
+				xmlString += '<Row>' +
+					'<Cell><Data ss:Type="String">' + detail.itemid + '</Data></Cell>' +
+					'<Cell><Data ss:Type="String">' + detail.displayname + '</Data></Cell>' +
+					'<Cell><Data ss:Type="String">' + (detail.location || '') + '</Data></Cell>' ;
+
+				if(isFloat(averagecost)){
+					xmlString += '<Cell ss:StyleID="number2"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>' ;
+				}else{
+					xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>';
+				}
+
+				xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.currentSold) + '</Data></Cell>' +
+					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlQTY) + '</Data></Cell>' +
+					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
+					//20230710
+					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + detail.Data.data[i].inv_qty || '' + '</Data></Cell>' +
+					'<Cell ss:StyleID="number1"><Data ss:Type="String">' + NVL(detail.Data.data + i.toString.inv_qty) +'</Data></Cell>' +
+					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + daysDiff + '</Data></Cell>' +
+					//
+				'</Row>';
 			}
-
-			xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.currentSold) + '</Data></Cell>' +
-				'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlQTY) + '</Data></Cell>' +
-				'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
-				//20230710
-				'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + '' + '</Data></Cell>' +
-				'<Cell ss:StyleID="number1"><Data ss:Type="String">' + detail.trandate + '</Data></Cell>' +
-				'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + daysDiff + '</Data></Cell>' +
-				//
-			'</Row>';
 			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1) + '</Data></Cell>' +
 			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1_cost) + '</Data></Cell>' +
 			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p2) + '</Data></Cell>' +
