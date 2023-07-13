@@ -25,14 +25,18 @@
 	function getInputData(context)
 	{
 		return search.create({
-			type: "inventoryitem",
-			filters:[
-				//["type","anyof","Assembly"],
-				//"OR",
-				//["type","anyof","InvtPart"],
-				//"AND",
-				["internalid","anyof",1556]
-			],
+			// type: "inventoryitem",
+			// filters:[
+			// 	//["type","anyof","Assembly"],
+			// 	//"OR",
+			// 	//["type","anyof","InvtPart"],
+			// 	//"AND",
+			// 	["internalid","anyof",1556]
+			// ],
+			type: "item",
+				filters: [
+					["type", "anyof", "Assembly","InvtPart"],"AND",["internalid","anyof","954","980","1409","565"]
+				],
 	   		columns:
 	   		[
 				search.createColumn({ name: "name", label: "Name" }),
@@ -43,7 +47,6 @@
 
 	function map(context)
 	{
-		log.debug("map");
 		var obj = JSON.parse(context.value);
 		//var itemlocation = obj.values.inventorylocation.value
 		var scriptObj = runtime.getCurrentScript();
@@ -82,6 +85,7 @@
 			//#endregion
 
 			if( searchObj.runPaged().count > 0 ){
+
 				searchObj.run().each(function(result){
 					log.debug("result",result);
 					itemid = result.getValue({ name: 'itemid', join: "item", summary: "GROUP" });
@@ -139,6 +143,7 @@
 					}
 					//log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
 					//進貨
+					log.debug("searchObj trans_type",trans_type);
 					if( trans_type == "ItemRcpt" || 
 						trans_type == "InvAdjst" || 
 						trans_type == "InvTrnfr" || 
@@ -166,19 +171,22 @@
 					return true;
 				});
 
+				//log.debug("onHandAmount",onHandAmount);
+				//log.debug("onHand",onHand);
+
 				var averagecost = onHandAmount / onHand;
+				//log.debug("averagecost",averagecost);
 				location_name.forEach(function (result, location_index) {
 					var writePeriod = [];
 					var dayArray = [];
 					var writePeriod_So = [];
-					log.debug("PERIOD_ARR",PERIOD_ARR);
 					PERIOD_ARR.forEach(function (result, index) {
 						writePeriod[index] = 0;
 						writePeriod_So[index] = 0;
 						dayArray[index] = '';
 					});
 					var onHand_temp = location_onHand[location_index]; //當on hand都扣完，就不繼續撈
-					// log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
+					//log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
 					if( location_onHand[location_index] != 0 )
 					{
 						PERIOD_ARR.forEach(function (result, index) {
@@ -220,8 +228,9 @@
 									createdfrom = result.getValue({name: "tranid",join: "createdFrom",summary: "GROUP"});	//PO Number
 									createdfromtype = result.getText({ name: "type",join: "createdFrom", summary: "GROUP" });
 									var trandateTest =  result.getValue({name: 'trandate',summary: "GROUP"}); 
-									log.debug("againgDay",againgDay);
+
 									//進貨
+									log.debug("location_name trans_type",trans_type);
 									if((trans_type == "ItemRcpt" && createdfromtype != "Transfer Order") || 
 										(trans_type == "InvAdjst" && Number(sum) > 0) || 
 										(trans_type == "Build" && Number(sum) > 0) || 
@@ -250,9 +259,10 @@
 
 								});
 								//log.debug(location_name[location_index],"onHand_temp="+onHand_temp+",period_in_TTL="+period_in_TTL);
-								log.debug("writePeriod 1",writePeriod);
-								log.debug("onHand_temp",onHand_temp);
-								log.debug("period_in_TTL",period_in_TTL);
+								//log.debug("writePeriod 1",writePeriod);
+								//log.debug("dayArray 1",dayArray);
+								//log.debug("onHand_temp",onHand_temp);
+
 								var periodsum = 0;
 								if(onHand_temp - period_in_TTL >= 0){
 									writePeriod[index] = Number(period_in_TTL);
@@ -264,9 +274,9 @@
 									dayArray[index] = againgDay;
 									periodsum = Number(onHand_temp);
 								}
-								log.debug("writePeriod 2",writePeriod);
-								log.debug("dayArray",dayArray);
-								log.debug("//////////////");
+								//log.debug("writePeriod 2",writePeriod);
+								//log.debug("dayArray 2",dayArray);
+								//log.debug("//////////////");
 								// 收料與開帳資料減掉onHand = 可以讓其他倉庫剩餘onHand扣除
 								for(var d = 0; d < PeriodObject[obj.id+"_"+location_index].length; ) {
 									if(periodsum > 0){
@@ -286,7 +296,6 @@
 								writePeriod_So[index] = period_out_TTL*-1;
 							}
 						});
-						log.debug("查詢SO單 writePeriod",writePeriod);
 						//查詢SO單
 						soTranid = '';
 						soAmount = '';
@@ -335,6 +344,7 @@
 							return element !== 0;
 						});
 
+						//紀錄againg和Inv_QTY
 						var data = {};
 						for (var i = 0; i < newWritePeriod.length; i++) {
 							var key = "data" + (i + 1);
@@ -345,13 +355,13 @@
 						  }	
 		  
 						log.debug("Data",data);
-						//
+						//調倉判斷
 						if(Number(onHand_temp) > 0){
-						   //log.debug("有調倉",obj.id+"_"+location_index)
+						   log.debug("有調倉",obj.id+"_"+location_index)
 							context.write({
 								key: obj.id,
 								value: {
-									'Data1': data,
+									'Data': data,
 									'itemid' : itemid,
 									'displayname': displayname,
 									'salesdescription': salesdescription,
@@ -405,7 +415,7 @@
 								}
 							});
 						}else{
-						   //log.debug("無調倉",obj.id+"_"+location_index)
+						   log.debug("無調倉",obj.id+"_"+location_index)
 							context.write({
 								key: obj.id+"_"+location_index,
 								value: {
@@ -467,7 +477,7 @@
 						
 					}
 				});
-				// log.debug("PeriodObject",PeriodObject);
+
 				if(Period_flag){
 				   context.write({
 					   key: obj.id,
@@ -480,140 +490,142 @@
 		}
 		catch(e)
 		{
-			log.debug("error",e.message);
+			log.debug("map error",e.message);
 		}
 	}
 
 	function reduce(context) {
-		log.debug("reduce");
-		var scriptObj = runtime.getCurrentScript();
-		var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
-		//var p_base_date = '2022/06/29';
-		var baseDate = format.format({
-				value: new Date(p_base_date),
-				type: format.Type.DATE,
-				timezone: format.Timezone.ASIA_TAIPEI
-		});
-		if(context.values.length == 1){
-			context.write({
-				key: context.key,
-				value: JSON.parse(context.values[0])
+		try{
+			var scriptObj = runtime.getCurrentScript();
+			var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
+			//var p_base_date = '2022/06/29';
+			var baseDate = format.format({
+					value: new Date(p_base_date),
+					type: format.Type.DATE,
+					timezone: format.Timezone.ASIA_TAIPEI
 			});
-		}else{
-			var Period = "";
-			var PeriodObject = "";
-			for(var i = 0 ; i < context.values.length; i++){
-				if(JSON.parse(context.values[i]).PeriodObject){
-					PeriodObject = JSON.parse(context.values[i]).PeriodObject;
+			if(context.values.length == 1){
+				context.write({
+					key: context.key,
+					value: JSON.parse(context.values[0])
+				});
+			}else{
+				var Period = "";
+				var PeriodObject = "";
+				for(var i = 0 ; i < context.values.length; i++){
+					if(JSON.parse(context.values[i]).PeriodObject){
+						PeriodObject = JSON.parse(context.values[i]).PeriodObject;
+					}
 				}
-			}
-
-			log.debug("PeriodObject2",PeriodObject);
-			log.debug("context.values.length",context.values.length);
-			for(var i = 0 ; i < context.values.length; i++){
-				var obj = JSON.parse(context.values[i]);
-				if(!obj.PeriodObject){
-					log.debug("obj",obj);
-					Period = obj;
-					for (var per in PeriodObject) {
-					   if (PeriodObject.hasOwnProperty(per)) {
-						  if(PeriodObject[per].length > 0 && Number(Period["onHand_temp"]) > 0){
-							  log.debug("尋找其他倉"+per,PeriodObject[per]);
-							   for(var l = 0 ; l < PeriodObject[per].length; l++){
-								   var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);
-								   if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){
-									   PERIOD_ARR.forEach(function (result, index) {
-										   var from = result['from'];
-										   var to = result['to'];
-
-										   var newdate = new Date(baseDate);
-										   var newdate2 = new Date(baseDate);
-
-										   newdate.setDate(newdate.getDate() - from); // minus the date
-										   newdate2.setDate(newdate2.getDate() - to); // minus the date
-
-										   if(PeriodDate<=newdate && PeriodDate>= newdate2){
-											   Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(PeriodObject[per][l]["sum"]);
-											   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
-											   Period["onHand_temp"] = Number(Period["onHand_temp"]) - Number(PeriodObject[per][l]["sum"]);
-											   PeriodObject[per][l]["sum"] = 0;
-										   }
-									   });
-								   }else{
-									   PERIOD_ARR.forEach(function (result, index) {
-										   var from = result['from'];
-										   var to = result['to'];
-
-										   var newdate = new Date(baseDate);
-										   var newdate2 = new Date(baseDate);
-
-										   newdate.setDate(newdate.getDate() - from); // minus the date
-										   newdate2.setDate(newdate2.getDate() - to); // minus the date
-
-										   if(PeriodDate<=newdate && PeriodDate>= newdate2){
-											   Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(Period["onHand_temp"]);
-											   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
-											   PeriodObject[per][l]["sum"] = Number(PeriodObject[per][l]["sum"]) - Number(Period["onHand_temp"]);
-											   Period["onHand_temp"] = 0;
-										   }
-									   });
+	
+				//log.debug("PeriodObject2",PeriodObject);
+				//log.debug("context.values.length",context.values.length);
+				for(var i = 0 ; i < context.values.length; i++){
+					var obj = JSON.parse(context.values[i]);
+					if(!obj.PeriodObject){
+						log.debug("obj",obj);
+						Period = obj;
+						for (var per in PeriodObject) {
+						   if (PeriodObject.hasOwnProperty(per)) {
+							  if(PeriodObject[per].length > 0 && Number(Period["onHand_temp"]) > 0){
+								  log.debug("尋找其他倉"+per,PeriodObject[per]);
+								   for(var l = 0 ; l < PeriodObject[per].length; l++){
+									   var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);
+									   if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){
+										   PERIOD_ARR.forEach(function (result, index) {
+											   var from = result['from'];
+											   var to = result['to'];
+	
+											   var newdate = new Date(baseDate);
+											   var newdate2 = new Date(baseDate);
+	
+											   newdate.setDate(newdate.getDate() - from); // minus the date
+											   newdate2.setDate(newdate2.getDate() - to); // minus the date
+	
+											   if(PeriodDate<=newdate && PeriodDate>= newdate2){
+												   Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(PeriodObject[per][l]["sum"]);
+												   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
+												   Period["onHand_temp"] = Number(Period["onHand_temp"]) - Number(PeriodObject[per][l]["sum"]);
+												   PeriodObject[per][l]["sum"] = 0;
+											   }
+										   });
+									   }else{
+										   PERIOD_ARR.forEach(function (result, index) {
+											   var from = result['from'];
+											   var to = result['to'];
+	
+											   var newdate = new Date(baseDate);
+											   var newdate2 = new Date(baseDate);
+	
+											   newdate.setDate(newdate.getDate() - from); // minus the date
+											   newdate2.setDate(newdate2.getDate() - to); // minus the date
+	
+											   if(PeriodDate<=newdate && PeriodDate>= newdate2){
+												   Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(Period["onHand_temp"]);
+												   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
+												   PeriodObject[per][l]["sum"] = Number(PeriodObject[per][l]["sum"]) - Number(Period["onHand_temp"]);
+												   Period["onHand_temp"] = 0;
+											   }
+										   });
+									   }
 								   }
 							   }
 						   }
 					   }
-				   }
-				   // 重新整理
-				   var onHand_temp = Period.ttlQTY;
-				   PERIOD_ARR.forEach(function (result, index) {
-					   var from = result['from'];
-					   var to = result['to'];
-
-					   //log.debug("onHand_temp",onHand_temp);
-					   if(Number(onHand_temp) > 0){
-						   //log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
-						   if(Number(onHand_temp) - Number(Period["_"+from+"_"+to]) >= 0){
-							   onHand_temp = Number(onHand_temp) - Number(Period["_"+from+"_"+to]);
+					   // 重新整理
+					   var onHand_temp = Period.ttlQTY;
+					   PERIOD_ARR.forEach(function (result, index) {
+						   var from = result['from'];
+						   var to = result['to'];
+	
+						   //log.debug("onHand_temp",onHand_temp);
+						   if(Number(onHand_temp) > 0){
+							   //log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
+							   if(Number(onHand_temp) - Number(Period["_"+from+"_"+to]) >= 0){
+								   onHand_temp = Number(onHand_temp) - Number(Period["_"+from+"_"+to]);
+							   }else{
+								   Period["_"+from+"_"+to] = Number(onHand_temp);
+								   Period["_"+from+"_"+to+"_COST"] = Number(onHand_temp) * Number(Period["averagecost"]);
+								   onHand_temp = 0;
+							   }
 						   }else{
-							   Period["_"+from+"_"+to] = Number(onHand_temp);
-							   Period["_"+from+"_"+to+"_COST"] = Number(onHand_temp) * Number(Period["averagecost"]);
-							   onHand_temp = 0;
+							   Period["_"+from+"_"+to] = 0;
+							   Period["_"+from+"_"+to+"_COST"] = 0;
 						   }
-					   }else{
-						   Period["_"+from+"_"+to] = 0;
-						   Period["_"+from+"_"+to+"_COST"] = 0;
-					   }
-				   });
-				   context.write({
-					   key: context.key+"_"+Period["location_index"],
-					   value: Period
-				   });
-				}
-		   }
+					   });
+					   context.write({
+						   key: context.key+"_"+Period["location_index"],
+						   value: Period
+					   });
+					}
+			   }
+			}
+		}catch(e){
+			log.debug("reduce error:",e.message);
 		}
 	}
 
 	function summarize(context) {
-		var scriptObj = runtime.getCurrentScript();
-		var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
-		//var p_base_date = '2022/06/29';
-		var tw = format.format({
-			value: new Date(p_base_date),  //date,
-			type: format.Type.DATETIME,
-			timezone: format.Timezone.ASIA_TAIPEI
-		});
-		tw = new Date(tw);
-		var year = tw.getFullYear();
-		var month = tw.getMonth() + 1;
-		var day = tw.getDate();
+		try{
+			var scriptObj = runtime.getCurrentScript();
+			var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
+			//var p_base_date = '2022/06/29';
+			var tw = format.format({
+				value: new Date(p_base_date),  //date,
+				type: format.Type.DATETIME,
+				timezone: format.Timezone.ASIA_TAIPEI
+			});
+			tw = new Date(tw);
+			var year = tw.getFullYear();
+			var month = tw.getMonth() + 1;
+			var day = tw.getDate();
 
-		var base_date = month + '/' + day + '/' + year;
-		var base_date_V2 = year +'/' + month + '/' + day ;
-		// var isExcel = scriptObj.getParameter({name: 'custscript_isexcel'});
-		// if(isExcel == '0') {
-		// 	runEmail(context, scriptObj);
-		// } else {
-		runExcel(context, base_date,base_date_V2);
-		// }
+			var base_date = month + '/' + day + '/' + year;
+			var base_date_V2 = year +'/' + month + '/' + day ;
+			runExcel(context, base_date,base_date_V2);
+		}catch(e){
+			log.debug("summarize error:",e.message);
+		}
 	}
 
 	//#region Function
@@ -690,237 +702,114 @@
 	}
 
 	function runExcel(context, base_date,base_date_V2){
+		try{
+			var userObj = runtime.getCurrentUser();
 
-		var userObj = runtime.getCurrentUser();
+			var xmlString = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>';
+			xmlString += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
+			xmlString += 'xmlns:o="urn:schemas-microsoft-com:office:office" ';
+			xmlString += 'xmlns:x="urn:schemas-microsoft-com:office:excel" ';
+			xmlString += 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ';
+			xmlString += 'xmlns:html="http://www.w3.org/TR/REC-html40">';
+			xmlString += '<Styles>';
+			xmlString += '<Style ss:ID="number1">';
+			xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
+			xmlString += '<NumberFormat ss:Format="#,##0_);[Red]\(#,##0\)"/>';
+			xmlString += '</Style>';
+			xmlString += '<Style ss:ID="number2">';
+			xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
+			xmlString += '<NumberFormat ss:Format="#,##0.000_);[Red]\(#,##0.000\)"/>';
+			xmlString += '</Style>';
+			xmlString += '</Styles>';
+			xmlString += '<Worksheet ss:Name="Sheet1">';
+			xmlString += '<Table>';
 
-		var xmlString = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>';
-		xmlString += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
-		xmlString += 'xmlns:o="urn:schemas-microsoft-com:office:office" ';
-		xmlString += 'xmlns:x="urn:schemas-microsoft-com:office:excel" ';
-		xmlString += 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ';
-		xmlString += 'xmlns:html="http://www.w3.org/TR/REC-html40">';
-		xmlString += '<Styles>';
-		xmlString += '<Style ss:ID="number1">';
-		xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
-		xmlString += '<NumberFormat ss:Format="#,##0_);[Red]\(#,##0\)"/>';
-		xmlString += '</Style>';
-		xmlString += '<Style ss:ID="number2">';
-		xmlString += '<Alignment ss:Horizontal="Right" ss:Vertical="Center"/>';
-		xmlString += '<NumberFormat ss:Format="#,##0.000_);[Red]\(#,##0.000\)"/>';
-		xmlString += '</Style>';
-		xmlString += '</Styles>';
-		xmlString += '<Worksheet ss:Name="Sheet1">';
-		xmlString += '<Table>';
-		// xmlString += '<Row>' +
-		// '<Cell><Data ss:Type="String">帳款截止:</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">' + scriptObj.getParameter({name: 'custscript_base_date'}) + '</Data></Cell>' +
-		// '</Row>';
-		xmlString += '<Row>' +
-		'<Cell><Data ss:Type="String">基準日:</Data></Cell>' +
-		'<Cell><Data ss:Type="String">' + base_date + '</Data></Cell>' +
-		'</Row>';
-		xmlString += '<Row>' +
-		'<Cell><Data ss:Type="String">製表人:</Data></Cell>' +
-		'<Cell><Data ss:Type="String">' + userObj.name + '</Data></Cell>' +
-		'</Row>';
-		xmlString += '<Row>' +
-		'<Cell><Data ss:Type="String">Item Name/Number : Part Number</Data></Cell>' +
-		'<Cell><Data ss:Type="String">Display Name/Code : Part Description</Data></Cell>' +
-		'<Cell><Data ss:Type="String">Location</Data></Cell>' +
-		'<Cell><Data ss:Type="String">AVERAGE COST</Data></Cell>' +
-		'<Cell><Data ss:Type="String">Selling Qty in current month </Data></Cell>' +
-		'<Cell><Data ss:Type="String">Total Qty </Data></Cell>' +
-		'<Cell><Data ss:Type="String">Total Amt </Data></Cell>' +
-		//20230710
-		'<Cell><Data ss:Type="String">Inventory QTY </Data></Cell>' +
-		'<Cell><Data ss:Type="String">Inventory Date </Data></Cell>' +
-		'<Cell><Data ss:Type="String">Aging Days </Data></Cell>' +
-		//
-		// '<Cell><Data ss:Type="String">0-30 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">0-30 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">31-60 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">31-60 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">61-90 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">61-90 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">90-120 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">90-120 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">121-150 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">121-150 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">151-180 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">151-180 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">181-360 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">181-360 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">361-540 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">361-540 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">541-720 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">541-720 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">721-1080 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">721-1080 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">over 1080 QTY</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">over 1080 AMT</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">Cost Center</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">Brand</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">Class</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">In SO Qty</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">最近一次異動日</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">進貨價格</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">最近一次出貨日</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">出貨價格</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">Order#</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">Date</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">DL Qty</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">銷售金額</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">幣別</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">銷售金額(NTD)</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">單價</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">業務部門</Data></Cell>' +
-		// '<Cell><Data ss:Type="String">業務員</Data></Cell>' +
-	'</Row>';
-
-	context.output.iterator().each(function (key, value){
-		//log.debug(key,value);
-		var details = JSON.parse(value);
-		if(details.ttlQTY > 0 ){
-			xmlString = writeXml(details, xmlString,base_date_V2);
+			xmlString += '<Row>' +
+			'<Cell><Data ss:Type="String">Item Name/Number : Part Number</Data></Cell>' +
+			'<Cell><Data ss:Type="String">Display Name/Code : Part Description</Data></Cell>' +
+			'<Cell><Data ss:Type="String">Location</Data></Cell>' +
+			'<Cell><Data ss:Type="String">AVERAGE COST</Data></Cell>' +
+			'<Cell><Data ss:Type="String">Selling Qty in current month </Data></Cell>' +
+			'<Cell><Data ss:Type="String">Total Qty </Data></Cell>' +
+			'<Cell><Data ss:Type="String">Total Amt </Data></Cell>' +
+			//20230710
+			'<Cell><Data ss:Type="String">Inventory QTY </Data></Cell>' +
+			'<Cell><Data ss:Type="String">Inventory Date </Data></Cell>' +
+			'<Cell><Data ss:Type="String">Aging Days </Data></Cell>' +
+			'</Row>';
+	
+			context.output.iterator().each(function (key, value){
+				//log.debug(key,value);
+				var details = JSON.parse(value);
+				if(details.ttlQTY > 0 ){
+					xmlString = writeXml(details, xmlString,base_date_V2);
+				}
+				return true;
+			});
+		
+				xmlString += '</Table></Worksheet></Workbook>';
+				//encode contents
+		
+				var base64EncodedString = encode.convert({
+					string: xmlString,
+					inputEncoding: encode.Encoding.UTF_8,
+					outputEncoding: encode.Encoding.BASE_64
+				});
+		
+				//create file
+				var folderId = custfolder.getUserFolder(runtime.getCurrentUser().name,'客製報表');
+				var xlsFile = file.create({name: '庫齡.xls', fileType: 'EXCEL', contents: base64EncodedString, folder: folderId});
+				xlsFile.save();
+		}catch(e){
+			throw 'runExcel error：' + e.message;
 		}
-		return true;
-	});
-
-		xmlString += '</Table></Worksheet></Workbook>';
-		//encode contents
-
-		var base64EncodedString = encode.convert({
-			string: xmlString,
-			inputEncoding: encode.Encoding.UTF_8,
-			outputEncoding: encode.Encoding.BASE_64
-		});
-
-		//create file
-		var folderId = custfolder.getUserFolder(runtime.getCurrentUser().name,'客製報表');
-		var xlsFile = file.create({name: '庫齡.xls', fileType: 'EXCEL', contents: base64EncodedString, folder: folderId});
-		xlsFile.save();
 	}
 
 	function writeXml(detail, xmlString,base_date_V2)
 	{
 		try{
-			log.debug("detail",detail);
+			log.debug("detail",detail);	
 			var averagecost = Number(NVL(detail.ttlAMT/detail.ttlQTY));
-			var p1 = Number(detail._0_30);
-			var p2 = Number(detail._31_60);
-			var p3 = Number(detail._61_90);
-			var p4 = Number(detail._91_120);
-			var p5 = Number(detail._121_150);
-			var p6 = Number(detail._151_180);
-			var p7 = Number(detail._181_360);
-			var p9 = Number(detail._361_540);
-			var p10 = Number(detail._541_720);
-			var p11 = Number(detail._721_1080);
-			var p12 = Number(detail._1081_9999);
-
-			var p1_cost = Number(detail._0_30_COST);
-			var p2_cost = Number(detail._31_60_COST);
-			var p3_cost = Number(detail._61_90_COST);
-			var p4_cost = Number(detail._91_120_COST);
-			var p5_cost = Number(detail._121_150_COST);
-			var p6_cost = Number(detail._151_180_COST);
-			var p7_cost = Number(detail._181_360_COST);
-			var p9_cost = Number(detail._361_540_COST);
-			var p10_cost = Number(detail._541_720_COST);
-			var p11_cost = Number(detail._721_1080_COST);
-			var p12_cost = Number(detail._1081_9999_COST);
-
-			var in_amount = Number(detail.in_amount);
-			var out_amount = Number(detail.out_amount);
-			var so_qty = Number(detail.so_qty);
-
-			//log.debug("testDay",base_date_V2);
-			//log.debug("detail.trandate",detail.trandate);
-			
 			var toDay = new Date(base_date_V2);
-			var tranDate = new Date(detail.trandate);
-			//var tranDate = new Date('2023/7/10');
 
-			//計算天數差異
-			var timeDiff = Math.abs(toDay.getTime() - tranDate.getTime());
-			var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-			//log.debug("daysDiff",daysDiff);
+			for(var key in detail.Data){
+				//log.debug("key",key);
+				if (detail.Data.hasOwnProperty(key)) {
+					var againgValue = detail.Data[key].againg;
+					//log.debug("againg",againgValue);
+					var invQtyValue = detail.Data[key].inv_qty;
+					//log.debug("inv_qty",invQtyValue);
 
-			var dataCount = Object.keys(detail.Data).length;
-			var aaa =detail.Data.data1.againg;
-			var bbb =detail.Data.data2.againg;
-			log.debug("dataCount",dataCount);
-			log.debug("aaa",aaa);
-			log.debug("bbb",bbb);
+					var tranDate = new Date(againgValue);
+					//計算天數差異
+					var timeDiff = Math.abs(toDay.getTime() - tranDate.getTime());
+					var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-			for(var i = 1; i <= Object.keys(detail.Data).length; i++){
-				var testQQQ = 'detail.Data.data' + String(i);
-				log.debug("testQQQ",testQQQ);
-				log.debug(" detail.Data.data[i]", detail.Data.data[i].inv_qty);
-				xmlString += '<Row>' +
-					'<Cell><Data ss:Type="String">' + detail.itemid + '</Data></Cell>' +
-					'<Cell><Data ss:Type="String">' + detail.displayname + '</Data></Cell>' +
-					'<Cell><Data ss:Type="String">' + (detail.location || '') + '</Data></Cell>' ;
+					xmlString += '<Row>' +
+						'<Cell><Data ss:Type="String">' + detail.itemid + '</Data></Cell>' +
+						'<Cell><Data ss:Type="String">' + detail.displayname + '</Data></Cell>' +
+						'<Cell><Data ss:Type="String">' + (detail.location || '') + '</Data></Cell>' ;
 
-				if(isFloat(averagecost)){
-					xmlString += '<Cell ss:StyleID="number2"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>' ;
-				}else{
-					xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>';
+					if(isFloat(averagecost)){
+						xmlString += '<Cell ss:StyleID="number2"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>' ;
+					}else{
+						xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(averagecost) + '</Data></Cell>';
+					}
+
+					xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.currentSold) + '</Data></Cell>' +
+						'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlQTY) + '</Data></Cell>' +
+						'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
+						//20230710
+						'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(invQtyValue) + '</Data></Cell>' +
+						'<Cell ss:StyleID="number1"><Data ss:Type="String">' + (againgValue || '') +'</Data></Cell>' +
+						'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + daysDiff + '</Data></Cell>' +
+						//
+					'</Row>';
 				}
-
-				xmlString += '<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.currentSold) + '</Data></Cell>' +
-					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlQTY) + '</Data></Cell>' +
-					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(detail.ttlAMT) + '</Data></Cell>' +
-					//20230710
-					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + detail.Data.data[i].inv_qty || '' + '</Data></Cell>' +
-					'<Cell ss:StyleID="number1"><Data ss:Type="String">' + NVL(detail.Data.data + i.toString.inv_qty) +'</Data></Cell>' +
-					'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + daysDiff + '</Data></Cell>' +
-					//
-				'</Row>';
 			}
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p1_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p2) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p2_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p3) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p3_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p4) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p4_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p5) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p5_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p6) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p6_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p7) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p7_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p9) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p9_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p10) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p10_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p11) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p11_cost) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p12) + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(p12_cost) + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.department || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.brand || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.itemclass || '') + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(so_qty) + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.in_date || '') + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(in_amount) + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.out_date || '') + '</Data></Cell>' +
-			// 	'<Cell ss:StyleID="number1"><Data ss:Type="Number">' + NVL(out_amount) + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soTranid || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soDate || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soQuantity || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soAmount || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.currency || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soAmountTWD || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soRate || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soDepartment || '') + '</Data></Cell>' +
-			// 	'<Cell><Data ss:Type="String">' + (detail.soSales || '') + '</Data></Cell>' +
-			// '</Row>';
 			return xmlString;
 		}catch(e){
-			log.debug("writeXml error",e.message);
+			throw 'writeXml error：' + e.message;
 		}
 	}
 
