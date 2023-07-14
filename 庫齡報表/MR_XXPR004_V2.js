@@ -35,7 +35,10 @@
 			// ],
 			type: "item",
 				filters: [
-					["type", "anyof", "Assembly","InvtPart"],"AND",["internalid","anyof","954","980","1409","565"]
+					["type", "anyof", "Assembly","InvtPart"],
+					"AND",
+					["internalid","anyof","954","980","1409","565"]
+					//["internalid","anyof","1409"]
 				],
 	   		columns:
 	   		[
@@ -87,7 +90,7 @@
 			if( searchObj.runPaged().count > 0 ){
 
 				searchObj.run().each(function(result){
-					log.debug("result",result);
+					//log.debug("result",result);
 					itemid = result.getValue({ name: 'itemid', join: "item", summary: "GROUP" });
 					displayname = result.getValue({ name: 'displayname', join: "item", summary: "GROUP" });
 					salesdescription = result.getValue({ name: 'salesdescription', join: "item", summary: "GROUP" });
@@ -143,7 +146,7 @@
 					}
 					//log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
 					//進貨
-					log.debug("searchObj trans_type",trans_type);
+					//log.debug("searchObj trans_type",trans_type);
 					if( trans_type == "ItemRcpt" || 
 						trans_type == "InvAdjst" || 
 						trans_type == "InvTrnfr" || 
@@ -185,7 +188,11 @@
 						writePeriod_So[index] = 0;
 						dayArray[index] = '';
 					});
+
+					// log.debug("location_index",location_index);
+					// log.debug("location_onHand[location_index]",location_onHand[location_index]);
 					var onHand_temp = location_onHand[location_index]; //當on hand都扣完，就不繼續撈
+					//log.debug("onHand_temp",onHand_temp);
 					//log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
 					if( location_onHand[location_index] != 0 )
 					{
@@ -498,18 +505,23 @@
 		try{
 			var scriptObj = runtime.getCurrentScript();
 			var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
+			var writePeriod = [];
+			var dayArray = [];
 			//var p_base_date = '2022/06/29';
 			var baseDate = format.format({
 					value: new Date(p_base_date),
 					type: format.Type.DATE,
 					timezone: format.Timezone.ASIA_TAIPEI
 			});
+			log.debug("context.values",context.values);
 			if(context.values.length == 1){
+				log.debug("context.values.length == 1");
 				context.write({
 					key: context.key,
 					value: JSON.parse(context.values[0])
 				});
 			}else{
+				log.debug("context.values.length != 1");
 				var Period = "";
 				var PeriodObject = "";
 				for(var i = 0 ; i < context.values.length; i++){
@@ -518,12 +530,13 @@
 					}
 				}
 	
-				//log.debug("PeriodObject2",PeriodObject);
+				log.debug("reduce PeriodObject2",PeriodObject);
+				log.debug("reduce Period 2",Period);
 				//log.debug("context.values.length",context.values.length);
 				for(var i = 0 ; i < context.values.length; i++){
 					var obj = JSON.parse(context.values[i]);
 					if(!obj.PeriodObject){
-						log.debug("obj",obj);
+						log.debug("reduce obj",obj);
 						Period = obj;
 						for (var per in PeriodObject) {
 						   if (PeriodObject.hasOwnProperty(per)) {
@@ -531,8 +544,14 @@
 								  log.debug("尋找其他倉"+per,PeriodObject[per]);
 								   for(var l = 0 ; l < PeriodObject[per].length; l++){
 									   var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);
+									   
+									   
 									   if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){
+										log.debug("11111");
 										   PERIOD_ARR.forEach(function (result, index) {
+
+											writePeriod[index] =0;
+											dayArray[index] = '';
 											   var from = result['from'];
 											   var to = result['to'];
 	
@@ -547,10 +566,24 @@
 												   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
 												   Period["onHand_temp"] = Number(Period["onHand_temp"]) - Number(PeriodObject[per][l]["sum"]);
 												   PeriodObject[per][l]["sum"] = 0;
+
+												   writePeriod[index] = Period["_"+from+"_"+to];
+													dayArray[index] = PeriodObject[per][l]["trandate"];
+
+													log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));
+													log.debug("Number(PeriodObject[per][l][sum])",Number(PeriodObject[per][l]["sum"]));
+													log.debug("index",index);
+													log.debug("dayArray[index]",dayArray[index]);
+													log.debug("writePeriod[index]",writePeriod[index]);
 											   }
 										   });
 									   }else{
+										log.debug("22222");
 										   PERIOD_ARR.forEach(function (result, index) {
+
+											writePeriod[index] =0;
+											dayArray[index] = '';
+
 											   var from = result['from'];
 											   var to = result['to'];
 	
@@ -561,10 +594,14 @@
 											   newdate2.setDate(newdate2.getDate() - to); // minus the date
 	
 											   if(PeriodDate<=newdate && PeriodDate>= newdate2){
+												log.debug("2222-2");
 												   Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(Period["onHand_temp"]);
 												   Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
 												   PeriodObject[per][l]["sum"] = Number(PeriodObject[per][l]["sum"]) - Number(Period["onHand_temp"]);
 												   Period["onHand_temp"] = 0;
+
+												   writePeriod[index] = Period["_"+from+"_"+to];
+												   dayArray[index] = PeriodObject[per][l]["trandate"];
 											   }
 										   });
 									   }
@@ -572,19 +609,28 @@
 							   }
 						   }
 					   }
+
+					   log.debug("reduce writePeriod",writePeriod);
+					   log.debug("reduce dayArray",dayArray);
+					   log.debug("reduce PeriodObject3",PeriodObject);
+					   log.debug("reduce Period 3",Period);
 					   // 重新整理
 					   var onHand_temp = Period.ttlQTY;
+
+
 					   PERIOD_ARR.forEach(function (result, index) {
 						   var from = result['from'];
 						   var to = result['to'];
-	
+						  
 						   //log.debug("onHand_temp",onHand_temp);
 						   if(Number(onHand_temp) > 0){
+
 							   //log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
 							   if(Number(onHand_temp) - Number(Period["_"+from+"_"+to]) >= 0){
 								   onHand_temp = Number(onHand_temp) - Number(Period["_"+from+"_"+to]);
 							   }else{
 								   Period["_"+from+"_"+to] = Number(onHand_temp);
+								  
 								   Period["_"+from+"_"+to+"_COST"] = Number(onHand_temp) * Number(Period["averagecost"]);
 								   onHand_temp = 0;
 							   }
@@ -593,6 +639,27 @@
 							   Period["_"+from+"_"+to+"_COST"] = 0;
 						   }
 					   });
+
+					   //紀錄againg和Inv_QTY
+					   var newDayArray = dayArray.filter(function(element){
+						return element !== "";
+					});
+
+					var newWritePeriod = writePeriod.filter(function(element){
+						return element !== 0;
+					});
+
+					//紀錄againg和Inv_QTY
+					for (var i = 0; i < newWritePeriod.length; i++) {
+						var key = "data" + (i + 1);
+						Period.Data[key] = {
+						  'againg': newDayArray[i],
+						  'inv_qty': newWritePeriod[i]
+						};
+					  }	
+		  
+
+					   log.debug("reduce Period",Period);
 					   context.write({
 						   key: context.key+"_"+Period["location_index"],
 						   value: Period
