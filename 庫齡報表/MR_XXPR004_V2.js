@@ -24,6 +24,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 
    function getInputData(context)
    {
+	log.debug("getInputData");
 	   return search.create({
 		   // type: "inventoryitem",
 		   // filters:[
@@ -37,8 +38,8 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 			   filters: [
 				   ["type", "anyof", "Assembly","InvtPart"],
 				   "AND",
-				   ["internalid","anyof","954","980","1409","565"]
-				   //["internalid","anyof","565","1556"]
+				   //["internalid","anyof","954","980","1409","565"]
+				   ["internalid","anyof","565"]
 			   ],
 			  columns:
 			  [
@@ -50,6 +51,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 
    function map(context)
    {
+	
 	   var obj = JSON.parse(context.value);
 	   //var itemlocation = obj.values.inventorylocation.value
 	   var scriptObj = runtime.getCurrentScript();
@@ -90,7 +92,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   if( searchObj.runPaged().count > 0 ){
 
 			   searchObj.run().each(function(result){
-				   //log.debug("result",result);
+				   ////log.debug("result",result);
 				   itemid = result.getValue({ name: 'itemid', join: "item", summary: "GROUP" });
 				   displayname = result.getValue({ name: 'displayname', join: "item", summary: "GROUP" });
 				   salesdescription = result.getValue({ name: 'salesdescription', join: "item", summary: "GROUP" });
@@ -115,7 +117,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 				   tranid = result.getValue({ name: 'tranid', summary: "GROUP" });
 				   createdfromtype = result.getText({ name: "type",join: "createdFrom", summary: "GROUP" });
 				   trandate = result.getValue({name: 'trandate',summary: "GROUP"});
-				   //log.debug("trandate",trandate);
+				   ////log.debug("trandate",trandate);
 				   //var tradingdate = result.getValue({name: 'custcol_om_recent_trading_day',summary: "GROUP"});
 				   location_name[internalid] = location;
 
@@ -138,15 +140,15 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   "sum":sum
 					   })
 
-					   //log.debug("PeriodObject",PeriodObject);
+					   ////log.debug("PeriodObject",PeriodObject);
 				   }
 				   if((trans_type == "InvTrnfr"  && Number(sum) > 0) || 
 					   (trans_type == "TrnfrOrd" && Number(sum) > 0)){
 					  Period_flag = true;
 				   }
-				   //log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
+				   ////log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
 				   //進貨
-				   //log.debug("searchObj trans_type",trans_type);
+				   ////log.debug("searchObj trans_type",trans_type);
 				   if( trans_type == "ItemRcpt" || 
 					   trans_type == "InvAdjst" || 
 					   trans_type == "InvTrnfr" || 
@@ -155,7 +157,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   in_TTL = Number(in_TTL) + Number(sum);
 					   in_amount = Number(in_amount) + Number(amount);
 					   location_in_TTL[internalid] = Number(NVL(location_in_TTL[internalid])) + Number(sum);
-					   //log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
+					   ////log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
 				   }
 				   else //出貨
 				   {
@@ -163,22 +165,22 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 						   out_TTL = Number(out_TTL) + Number(sum);
 						   out_amount = Number(out_amount) + Number(amount);
 						   location_out_TTL[internalid] = Number(NVL(location_out_TTL[internalid])) + Number(sum);
-						   //log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
+						   ////log.debug(location,"tranid="+tranid+",trans_type="+trans_type+",trandate="+trandate+",createdfromtype="+createdfromtype+",sum="+sum);
 					   }
 				   }
 
-				   //log.debug(itemid,"IN:"+in_TTL+" , OUT:"+out_TTL);
+				   ////log.debug(itemid,"IN:"+in_TTL+" , OUT:"+out_TTL);
 				   onHand = in_TTL + out_TTL;
 				   onHandAmount = in_amount + out_amount;
 				   location_onHand[internalid]= NVL(location_in_TTL[internalid]) + NVL(location_out_TTL[internalid]);
 				   return true;
 			   });
 
-			   //log.debug("onHandAmount",onHandAmount);
-			   //log.debug("onHand",onHand);
+			   ////log.debug("onHandAmount",onHandAmount);
+			   ////log.debug("onHand",onHand);
 
 			   var averagecost = onHandAmount / onHand;
-			   //log.debug("averagecost",averagecost);
+			   ////log.debug("averagecost",averagecost);
 			   location_name.forEach(function (result, location_index) {
 				   var writePeriod = [];
 				   var dayArray = [];
@@ -189,11 +191,11 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   dayArray[index] = '';
 				   });
 
-				   // log.debug("location_index",location_index);
-				   //log.debug("location_onHand[location_index]",location_onHand[location_index]);
+				   // //log.debug("location_index",location_index);
+				   ////log.debug("location_onHand[location_index]",location_onHand[location_index]);
 				   var onHand_temp = location_onHand[location_index]; //當on hand都扣完，就不繼續撈
-				   //log.debug("onHand_temp",onHand_temp);
-				   //log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
+				   ////log.debug("onHand_temp",onHand_temp);
+				   ////log.debug("location_onHandAmount[location_index]",location_onHandAmount[location_index]);
 				   if( location_onHand[location_index] != 0 )
 				   {
 					   PERIOD_ARR.forEach(function (result, index) {
@@ -237,7 +239,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 								   var trandateTest =  result.getValue({name: 'trandate',summary: "GROUP"}); 
 
 								   //進貨
-								   //log.debug("location_name trans_type",trans_type);
+								   ////log.debug("location_name trans_type",trans_type);
 								   if((trans_type == "ItemRcpt" && createdfromtype != "Transfer Order") || 
 									   (trans_type == "InvAdjst" && Number(sum) > 0) || 
 									   (trans_type == "Build" && Number(sum) > 0) || 
@@ -265,10 +267,10 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 								   return true;
 
 							   });
-							   //log.debug(location_name[location_index],"onHand_temp="+onHand_temp+",period_in_TTL="+period_in_TTL);
-							   //log.debug("writePeriod 1",writePeriod);
-							   //log.debug("dayArray 1",dayArray);
-							   //log.debug("onHand_temp",onHand_temp);
+							   ////log.debug(location_name[location_index],"onHand_temp="+onHand_temp+",period_in_TTL="+period_in_TTL);
+							   ////log.debug("writePeriod 1",writePeriod);
+							   ////log.debug("dayArray 1",dayArray);
+							   ////log.debug("onHand_temp",onHand_temp);
 
 							   var periodsum = 0;
 							   if(onHand_temp - period_in_TTL >= 0){
@@ -281,9 +283,9 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 								   dayArray[index] = againgDay;
 								   periodsum = Number(onHand_temp);
 							   }
-							   //log.debug("writePeriod 2",writePeriod);
-							   //log.debug("dayArray 2",dayArray);
-							   //log.debug("//////////////");
+							   ////log.debug("writePeriod 2",writePeriod);
+							   ////log.debug("dayArray 2",dayArray);
+							   ////log.debug("//////////////");
 							   // 收料與開帳資料減掉onHand = 可以讓其他倉庫剩餘onHand扣除
 							   for(var d = 0; d < PeriodObject[obj.id+"_"+location_index].length; ) {
 								   if(periodsum > 0){
@@ -331,7 +333,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   });
 
 					   var SO_Object = getSalesOrder(obj.id,baseDate_1,baseDate_2);
-					   //log.debug('SO_Object',SO_Object);
+					   ////log.debug('SO_Object',SO_Object);
 					   soTranid = SO_Object['tranid'];
 					   soAmount = SO_Object['amount'];
 					   soDate = SO_Object['trandate'];
@@ -361,10 +363,10 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 						   };
 						 }	
 		 
-					   log.debug("Data",data);
+					   //log.debug("Data",data);
 					   //調倉判斷
 					   if(Number(onHand_temp) > 0){
-						  //log.debug("有調倉",obj.id+"_"+location_index)
+						  ////log.debug("有調倉",obj.id+"_"+location_index)
 						   context.write({
 							   key: obj.id,
 							   value: {
@@ -423,7 +425,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 							   }
 						   });
 					   }else{
-						  //log.debug("無調倉",obj.id+"_"+location_index)
+						  ////log.debug("無調倉",obj.id+"_"+location_index)
 						   context.write({
 							   key: obj.id+"_"+location_index,
 							   value: {
@@ -486,9 +488,9 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   
 				   }
 			   });
-			   //log.debug("Period_flag",Period_flag)
+			   ////log.debug("Period_flag",Period_flag)
 			   if(Period_flag){
-				//log.debug("if Period_flag is true PeriodObject",PeriodObject)
+				////log.debug("if Period_flag is true PeriodObject",PeriodObject)
 				  context.write({
 					  key: obj.id,
 					  value: {
@@ -520,7 +522,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 				   type: format.Type.DATE,
 				   timezone: format.Timezone.ASIA_TAIPEI
 		   });
-		   //log.debug("context.values",context.values);
+		   ////log.debug("context.values",context.values);
 		   if(context.values.length == 1){
 			   context.write({
 				   key: context.key,
@@ -534,25 +536,18 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					   PeriodObject = JSON.parse(context.values[i]).PeriodObject;
 				   }
 			   }
-   
-			   //log.debug("reduce PeriodObject 1",PeriodObject);
-			   //log.debug("reduce Period 1",Period);
-			   //log.debug("context.values.length",context.values.length);
+
 			   for(var i = 0 ; i < context.values.length; i++){
 				   var obj = JSON.parse(context.values[i]);
 				   if(!obj.PeriodObject){
-					   //log.debug("reduce obj",obj);
 					   Period = obj;
 					   for (var per in PeriodObject) {
 						  if (PeriodObject.hasOwnProperty(per)) {
 							 if(PeriodObject[per].length > 0 && Number(Period["onHand_temp"]) > 0){
-								 log.debug("尋找其他倉"+per,PeriodObject[per]);
+								 //log.debug("尋找其他倉"+per,PeriodObject[per]);
 								  for(var l = 0 ; l < PeriodObject[per].length; l++){
-									  var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);
-									  
-									  
-									  if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){
-									  // log.debug("11111");
+									  var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);									  
+									  if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){;
 										  PERIOD_ARR.forEach(function (result, index) {
 
 										   //writePeriod[index] =0;
@@ -567,7 +562,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 											  newdate2.setDate(newdate2.getDate() - to); // minus the date
    
 											  if(PeriodDate<=newdate && PeriodDate>= newdate2){
-												//log.debug("Number(PeriodObject[per][l][sum]",Number(PeriodObject[per][l]["sum"]));
+												////log.debug("Number(PeriodObject[per][l][sum]",Number(PeriodObject[per][l]["sum"]));
 												  Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(PeriodObject[per][l]["sum"]);
 												  Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
 												  Period["onHand_temp"] = Number(Period["onHand_temp"]) - Number(PeriodObject[per][l]["sum"]);
@@ -576,9 +571,9 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 												  writePeriod[index] = Period["_"+from+"_"+to];
 												   dayArray[index] = PeriodObject[per][l]["trandate"];
 
-												   //log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));
-												   //log.debug("Number(PeriodObject[per][l][sum])",Number(PeriodObject[per][l]["sum"]));
-												   //log.debug("writePeriod AAAAAA",writePeriod);
+												   ////log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));
+												   ////log.debug("Number(PeriodObject[per][l][sum])",Number(PeriodObject[per][l]["sum"]));
+												   ////log.debug("writePeriod AAAAAA",writePeriod);
 												 
 											  }
 										  });
@@ -598,7 +593,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 											  newdate2.setDate(newdate2.getDate() - to); // minus the date
    
 											  if(PeriodDate<=newdate && PeriodDate>= newdate2){		
-												//log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));									   
+												////log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));									   
 												  Period["_"+from+"_"+to] = Number(Period["_"+from+"_"+to])+ Number(Period["onHand_temp"]);
 												  Period["_"+from+"_"+to+"_COST"] = Number(Period["_"+from+"_"+to]) * Number(Period["averagecost"]);
 												  PeriodObject[per][l]["sum"] = Number(PeriodObject[per][l]["sum"]) - Number(Period["onHand_temp"]);
@@ -606,7 +601,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 
 												  writePeriod[index] = Period["_"+from+"_"+to];
 												  dayArray[index] = PeriodObject[per][l]["trandate"];
-												  //log.debug("mmmmmmmmmmmmmmmmmmmm")
+												  ////log.debug("mmmmmmmmmmmmmmmmmmmm")
 											  }
 										  });
 									  }
@@ -614,11 +609,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 							  }
 						  }
 					  }
-					  //log.debug("writePeriod ggg",writePeriod);
-					  //log.debug("reduce writePeriod",writePeriod);
-					  //log.debug("reduce dayArray",dayArray);
-					  //log.debug("reduce PeriodObject 2",PeriodObject);
-					  //log.debug("reduce Period 2",Period);
+
 					  // 重新整理
 					  var onHand_temp = Period.ttlQTY;
 
@@ -627,10 +618,8 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 						  var from = result['from'];
 						  var to = result['to'];
 						 
-						  //log.debug("onHand_temp",onHand_temp);
 						  if(Number(onHand_temp) > 0){
-
-							  //log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
+							  ////log.debug("_"+from+"_"+to,Number(Period["_"+from+"_"+to]));
 							  if(Number(onHand_temp) - Number(Period["_"+from+"_"+to]) >= 0){
 								  onHand_temp = Number(onHand_temp) - Number(Period["_"+from+"_"+to]);
 							  }else{
@@ -665,7 +654,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 					 }	
 		 
 
-					  log.debug("reduce Period",Period);
+					  //log.debug("reduce Period",Period);
 					  context.write({
 						  key: context.key+"_"+Period["location_index"],
 						  value: Period
@@ -697,7 +686,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   var base_date_V2 = year +'/' + month + '/' + day ;
 		   runExcel(context, base_date,base_date_V2);
 	   }catch(e){
-		   log.debug("summarize error:",e.message);
+		   //log.debug("summarize error:",e.message);
 	   }
    }
 
@@ -812,7 +801,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   '</Row>';
    
 		   context.output.iterator().each(function (key, value){
-			   //log.debug(key,value);
+			   ////log.debug(key,value);
 			   var details = JSON.parse(value);
 			   if(details.ttlQTY > 0 ){
 				   xmlString = writeXml(details, xmlString,base_date_V2);
@@ -846,12 +835,12 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   var toDay = new Date(base_date_V2);
 
 		   for(var key in detail.Data){
-			   //log.debug("key",key);
+			   ////log.debug("key",key);
 			   if (detail.Data.hasOwnProperty(key)) {
 				   var againgValue = detail.Data[key].againg;
-				   //log.debug("againg",againgValue);
+				   ////log.debug("againg",againgValue);
 				   var invQtyValue = detail.Data[key].inv_qty;
-				   //log.debug("inv_qty",invQtyValue);
+				   ////log.debug("inv_qty",invQtyValue);
 
 				   var tranDate = new Date(againgValue);
 				   //計算天數差異
@@ -897,7 +886,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 
    function getTransfer(RecordType,TransType,TransferNo,itemid,quantity,trnfravg){
 	   try {
-		   //log.debug("TransferNo",TransferNo);
+		   ////log.debug("TransferNo",TransferNo);
 		   var TransDate = "";
 		   var fromLoctionID = "";
 		   //判斷是哪個倉轉過來的
@@ -949,7 +938,7 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 			 });
 			 return in_Arr;
 		} catch (error) {
-			log.debug(error.name,error.message);
+			//log.debug(error.name,error.message);
 		}
    }
 
