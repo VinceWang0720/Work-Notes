@@ -31,7 +31,7 @@
 					["type", "anyof", "Assembly","InvtPart"],
 					"AND",
 					//["internalid","anyof","954","980","1409","565","1556"]
-					["internalid","anyof","1038"]
+					["internalid","anyof","1556"]
 				],
 	   		columns:
 	   		[
