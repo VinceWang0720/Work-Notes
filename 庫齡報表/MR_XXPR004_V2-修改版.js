@@ -36,10 +36,10 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   // ],
 		   type: "item",
 			   filters: [
-				   ["type", "anyof", "Assembly","InvtPart"],
-				   "AND",
+				   ["type", "anyof", "Assembly","InvtPart"]
+				   //"AND",
 				   //["internalid","anyof","954","980","1409","565"]
-				   ["internalid","anyof","565"]
+				   //["internalid","anyof","565"]
 			   ],
 			  columns:
 			  [
@@ -512,10 +512,11 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 		   var p_base_date = scriptObj.getParameter({name: 'custscript_xxpr004_v2_base_date'});
 		   var writePeriod = [];
 		   var dayArray = [];
-		   PERIOD_ARR.forEach(function (result, index) {
-			writePeriod[index] = 0;
-			dayArray[index] = '';
-		});
+
+		   for (var i = 0; i < PERIOD_ARR.length; i++) {
+			writePeriod[i] = 0;
+			dayArray[i] = '';
+		   }	
 		   //var p_base_date = '2022/06/29';
 		   var baseDate = format.format({
 				   value: new Date(p_base_date),
@@ -549,9 +550,6 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 									  var PeriodDate = new Date(PeriodObject[per][l]["trandate"]);									  
 									  if(Number(Period["onHand_temp"]) >= Number(PeriodObject[per][l]["sum"])){;
 										  PERIOD_ARR.forEach(function (result, index) {
-
-										   //writePeriod[index] =0;
-										   //dayArray[index] = '';
 											  var from = result['from'];
 											  var to = result['to'];
    
@@ -569,20 +567,11 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 												  PeriodObject[per][l]["sum"] = 0;
 
 												  writePeriod[index] = Period["_"+from+"_"+to];
-												   dayArray[index] = PeriodObject[per][l]["trandate"];
-
-												   ////log.debug("Number(Period[onHand_temp])",Number(Period["onHand_temp"]));
-												   ////log.debug("Number(PeriodObject[per][l][sum])",Number(PeriodObject[per][l]["sum"]));
-												   ////log.debug("writePeriod AAAAAA",writePeriod);
-												 
+												   dayArray[index] = PeriodObject[per][l]["trandate"];												 
 											  }
 										  });
 									  }else{									 
 										  PERIOD_ARR.forEach(function (result, index) {
-
-										   //writePeriod[index] =0;
-										   //dayArray[index] = '';
-
 											  var from = result['from'];
 											  var to = result['to'];
    
@@ -610,10 +599,10 @@ function(encode, file, search, format, config, record, email, render, runtime, l
 						  }
 					  }
 
+					  log.debug("writePeriod",writePeriod);
+					  log.debug("dayArray",dayArray);
 					  // 重新整理
 					  var onHand_temp = Period.ttlQTY;
-
-
 					  PERIOD_ARR.forEach(function (result, index) {
 						  var from = result['from'];
 						  var to = result['to'];
